@@ -20,7 +20,7 @@ import {
     ReferenceLine
 } from 'recharts';
 
-import OverloadTooltip from './OverloadTooltip'
+import OverloadTooltip from '../components/OverloadTooltip'
 
 export const getHisto = (data, phase, fork = "db", iteration = "all", metric = "test") => {
     const ary = data.phase[phase].iteration[iteration].fork[fork].metric[metric].histogram[0].data;

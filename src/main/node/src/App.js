@@ -57,7 +57,7 @@ import Popover from '@material-ui/core/Popover';
 
 
 import { Route, Switch, withRouter } from 'react-router'
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { DateTime, Duration } from 'luxon';
 import { AutoSizer } from 'react-virtualized';
 
@@ -69,10 +69,6 @@ import WideBarChart, { getAreaBars } from './components/WideBarChart';
 import DistributionTimeseriesChart, { getSeries } from './components/DistributionTimeseriesChart';
 import theme from './theme';
 
-const data = window.__DATA__;
-delete window.__DATA__;
-
-console.log("data",data)
 const colorNames = Object.keys(theme.colors.chart);
 
 const fromNano = (ns) => {

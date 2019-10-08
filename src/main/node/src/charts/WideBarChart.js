@@ -1,26 +1,18 @@
 import React, { useState } from 'react';
 import {
-    Brush,
     Area,
     Label,
-    LabelList,
     Legend,
-    Cell,
-    LineChart,
-    BarChart,
     ComposedChart,
     Line,
-    Bar,
     CartesianGrid,
     XAxis,
     YAxis,
-    Text,
     Tooltip,
     ReferenceArea,
-    ReferenceLine
 } from 'recharts';
 import { DateTime } from 'luxon';
-import OverloadTooltip from './OverloadTooltip'
+import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
 const psList = new Set([
     "Requests",
@@ -52,15 +44,15 @@ export const getAreaBars = (data) => {
         const midIdx = (row.End / 2 + row.Start / 2)
         const mid = areaBars[midIdx] || { _areaKey: midIdx }
 
-        if(typeof areaBars[row.Start] !== "undefined"){
-            console.log("already have start",start,row)
-        }
-        if(typeof areaBars[row.End] !== "undefined"){
-            console.log("already have end",end,row)
-        }
-        if(typeof areaBars[midIdx] !== "undefined"){
-            console.log("already have mid",mid,row)
-        }
+        // if(typeof areaBars[row.Start] !== "undefined"){
+        //     console.log("already have start",start,row)
+        // }
+        // if(typeof areaBars[row.End] !== "undefined"){
+        //     console.log("already have end",end,row)
+        // }
+        // if(typeof areaBars[midIdx] !== "undefined"){
+        //     console.log("already have mid",mid,row)
+        // }
 
 
         const key = row.Phase.replace(/\//g, "_") + (typeof row.Name !== "undefined" ? "_" + row.Name : "" ) + (typeof row.Metric !== "undefined" ? "_" + row.Metric : "");
