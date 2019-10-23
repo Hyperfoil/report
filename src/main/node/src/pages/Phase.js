@@ -52,13 +52,9 @@ export default () => {
     let { phaseId } = useParams();
     const split = splitName(phaseId)
     const data = useSelector(state => state.data)
-    console.log("split", split)
-    console.log("data", data)
     const segments = []
 
     const metrics = data.phase[split.phase].iteration[split.iteration].fork[split.fork];
-    console.log("metrics", metrics)
-
     Object.keys(metrics.metric).forEach(metricName => {
         const metric = metrics.metric[metricName]
 
@@ -73,8 +69,6 @@ export default () => {
                 return rtrn;
             }
         }).filter(v => v !== undefined);
-
-        console.log("histo",histo)
 
         const tickTransform = {}
         histo.forEach(entry => {

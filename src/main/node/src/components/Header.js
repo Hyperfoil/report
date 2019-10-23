@@ -16,7 +16,7 @@ import { NavLink } from 'react-router-dom';
 
 import { useSelector } from 'react-redux'
 
-const getPhases = state=>state.data.total.map(v=>v.phase)
+const getPhases = state=>[...new Set(state.data.total.map(v=>v.phase))]
 
 export default ({ logoProps = {} }) => {
     const [open, setOpen] = useState(false)

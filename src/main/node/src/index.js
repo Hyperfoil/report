@@ -6,6 +6,8 @@ import '@patternfly/patternfly/patternfly.css'; //have to use this import to cus
 
 import { Provider } from 'react-redux'
 import { Route, Switch } from 'react-router'
+import CacheRoute, { CacheSwitch } from 'react-router-cache-route'
+
 import { ConnectedRouter } from 'connected-react-router'
 
 import { Helmet } from "react-helmet";
@@ -28,8 +30,6 @@ import Phase from './pages/Phase';
 const data = window.__DATA__;
 delete window.__DATA__;
 
-console.log("data",data)
-
 const store = configureStore(data)
 const logoProps = {
     href: '/',
@@ -48,18 +48,14 @@ ReactDOM.render(
                 <Helmet>
                     <title>HF:report</title>
                 </Helmet>
-            <Switch>
-                <Route exact path="/" render={
-                    ({match})=>{
-                        return (<Summary/>)
-                    }
-                } />
+            <CacheSwitch>
+                <CacheRoute exact path="/" component={Summary} />
                 <Route path="/phase/:phaseId" render={
                     ({match})=>{
                         return (<Phase/>)
                     }
                 } />
-            </Switch>
+            </CacheSwitch>
             </Page>
         </ConnectedRouter>
     </Provider>
