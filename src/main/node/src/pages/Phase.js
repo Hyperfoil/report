@@ -16,6 +16,7 @@ import {
     Label,
     ComposedChart,
     Line,
+    Bar,
     CartesianGrid,
     XAxis,
     YAxis,
@@ -70,15 +71,25 @@ export default () => {
             }
         }).filter(v => v !== undefined);
 
+        console.log(`${split.phase} ${split.iteration === ":DEFAULT:" ? "" : split.iteration} ${metricName} histogram`,histo)
+
         const tickTransform = {}
-        histo.forEach(entry => {
+        const ranges = {}
+        histo.forEach((entry,idx,all) => {
             tickTransform[entry.inversed] = entry.percentile
+            ranges[entry.value] = (idx>0 ? all[idx-1].value : 0)
         })
         const tickFormatter = (v) => {
             if (typeof tickTransform[v] !== "undefined") {
                 v = tickTransform[v]
             }
-            return Number(100 * v).toFixed(3)
+            return Number(100 * v).toFixed(2)
+        }
+        const rangeTickFormatter = (v,f,g) => {
+            if( typeof ranges[v] !== "undefined"){
+                return Number(100 * ranges[v]).toFixed(2)+" - "+Number(100 * v).toFixed(2)
+            }
+            return Number(100 * v).toFixed(2)
         }
 
         const extra = [
@@ -88,6 +99,43 @@ export default () => {
 
         segments.push(
             <PageSection key={metricName}>
+                <Card style={{ pageBreakInside: 'avoid' }}>
+                    <CardHeader>
+                        <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+                            <ToolbarGroup><ToolbarItem>{`${split.phase} ${split.iteration === ":DEFAULT:" ? "" : split.iteration} ${metricName} histogram`}</ToolbarItem></ToolbarGroup>
+                        </Toolbar>
+                    </CardHeader>
+                    <CardBody style={{ minHeight: 410 }}>
+                        <AutoSizer>{({ height, width }) => {
+                            return (
+                                <ComposedChart
+                                    width={width}
+                                    height={height}
+                                    data={histo}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis
+                                        type="number"
+                                        scale="log"
+                                        domain={['auto', 'auto']} //for use with log
+                                        dataKey="value"
+                                        //ticks={[1,10,100,1000,10000,100000,1000000]}
+                                        // tickFormatter={tickFormatter}
+                                    >
+                                        <Label value="response time" position="insideBottom" angle={0} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
+                                    </XAxis>
+                                    <YAxis yAxisId={0} orientation="left" >
+                                        <Label value="count" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
+                                    </YAxis>
+                                    <Bar name="requests" yAxisId={0} dataKey='_bucketCount' isAnimationActive={false} dot={false} fill="#002F5D" stroke={"#002F5D"} style={{ strokeWidth: 2 }} />
+                                    <Tooltip content={<OverloadTooltip />} labelFormatter={rangeTickFormatter} />
+                                </ComposedChart>
+                            )
+
+                        }}</AutoSizer>
+                    </CardBody>
+
+                </Card>
                 <Card style={{ pageBreakInside: 'avoid' }}>
                     <CardHeader>
                         <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
@@ -120,7 +168,7 @@ export default () => {
                                     </YAxis>
                                     <Line name="requests" yAxisId={0} dataKey='_bucketCount' isAnimationActive={false} fill="#6EC664" stroke="#6EC664" style={{ strokeWidth: 0 }} />
                                     <Line name="response time" yAxisId={1} dataKey='value' dot={false} isAnimationActive={false} stroke={'#002F5D'} style={{ strokeWidth: 2 }} />
-                                    <Tooltip content={<OverloadTooltip extra={extra}/>} labelFormatter={tickFormatter} />
+                                    <Tooltip content={<OverloadTooltip extra={extra} />} labelFormatter={tickFormatter} />
                                 </ComposedChart>
                             )
 

@@ -29,7 +29,7 @@ import Phase from './pages/Phase';
 
 const data = window.__DATA__;
 delete window.__DATA__;
-
+console.log("data",data)
 const store = configureStore(data)
 const logoProps = {
     href: '/',

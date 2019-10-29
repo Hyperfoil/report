@@ -81,6 +81,11 @@ public class ReportGenerator implements Command {
          }
       }
 
+      if( loaded == null || loaded.isEmpty() ){
+         System.out.printf("Failed to load data, check input files are valid json");
+         return CommandResult.FAILURE;
+      }
+
       try (
          BufferedReader reader =
             new BufferedReader(
