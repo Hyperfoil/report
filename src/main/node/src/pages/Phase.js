@@ -102,7 +102,7 @@ export default () => {
                 <Card style={{ pageBreakInside: 'avoid' }}>
                     <CardHeader>
                         <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-                            <ToolbarGroup><ToolbarItem>{`${split.phase} ${split.iteration === ":DEFAULT:" ? "" : split.iteration} ${metricName} histogram`}</ToolbarItem></ToolbarGroup>
+                            <ToolbarGroup><ToolbarItem>{`${split.phase} ${split.iteration === ":DEFAULT:" ? "" : split.iteration} ${metricName} response time histogram`}</ToolbarItem></ToolbarGroup>
                         </Toolbar>
                     </CardHeader>
                     <CardBody style={{ minHeight: 410 }}>
@@ -139,7 +139,7 @@ export default () => {
                 <Card style={{ pageBreakInside: 'avoid' }}>
                     <CardHeader>
                         <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-                            <ToolbarGroup><ToolbarItem>{`${split.phase} ${split.iteration === ":DEFAULT:" ? "" : split.iteration} ${metricName} histogram`}</ToolbarItem></ToolbarGroup>
+                            <ToolbarGroup><ToolbarItem>{`${split.phase} ${split.iteration === ":DEFAULT:" ? "" : split.iteration} ${metricName} percentile histogram`}</ToolbarItem></ToolbarGroup>
                         </Toolbar>
                     </CardHeader>
                     <CardBody style={{ minHeight: 410 }}>

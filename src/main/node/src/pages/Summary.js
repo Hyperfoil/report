@@ -279,7 +279,7 @@ export default () => {
                         <Card style={{ pageBreakInside: 'avoid' }}>
                             <CardHeader>
                                 <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-                                    <ToolbarGroup><ToolbarItem>{`${forkName} ${metricName} response times`}</ToolbarItem></ToolbarGroup>
+                                    <ToolbarGroup><ToolbarItem>{`${forkName === ":DEFAULT:" ? "" : forkName} ${metricName === ":DEFAULT:" ? "" : metricName} response times`}</ToolbarItem></ToolbarGroup>
                                 </Toolbar>
                             </CardHeader>
                             <CardBody style={{ minHeight: 400 }}>
