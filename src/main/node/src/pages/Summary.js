@@ -26,30 +26,37 @@ import {
 import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
 
+import {splitName} from '../redux/reducers';
 import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
 
 const getPhases = state => state.data.total.map(v => v.phase)
 const getMetrics = state => [...new Set(state.data.total.map(v => v.metric))]
-const splitName = name => {
-    const split = name.split("/");
-    const rtrn = {}
-    if (split.length === 1) {
-        rtrn.phase = split[0];
-        rtrn.iteration = ":DEFAULT:";
-        rtrn.fork = ":DEFAULT:";
-    }
-    if (split.length === 2) {
-        rtrn.phase = split[0];
-        rtrn.iteration = ":DEFAULT:"
-        rtrn.fork = split[1];
-    } else if (split.length === 3) {
-        rtrn.phase = split[0];
-        rtrn.iteration = split[1];
-        rtrn.fork = split[2];
-    }
-    return rtrn;
-}
+// const splitName = name => {
+//     const split = name.split("/");
+//     const rtrn = {}
+//     if (split.length === 1) {
+//         rtrn.phase = split[0];
+//         rtrn.iteration = ":DEFAULT:";
+//         rtrn.fork = ":DEFAULT:";
+//     }
+//     if (split.length === 2) {
+//         rtrn.phase = split[0];
+//         if( /^[0-9]{3}$/.test(split[1]) ){
+//             rtrn.fork = ":DEFAULT:"
+//             rtrn.iteration = split[1];
+    
+//         }else{
+//             rtrn.iteration = ":DEFAULT:"
+//             rtrn.fork = split[1];    
+//         }
+//     } else if (split.length === 3) {
+//         rtrn.phase = split[0];
+//         rtrn.iteration = split[1];
+//         rtrn.fork = split[2];
+//     }
+//     return rtrn;
+// }
 const buildName = (phase, iteration, fork) => {
     var rtrn = phase;
     if (!iteration.equals(":DEFAULT:")) {

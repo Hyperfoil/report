@@ -27,27 +27,27 @@ import { AutoSizer } from 'react-virtualized';
 
 import OverloadTooltip from '../components/OverloadTooltip'
 
+import {splitName} from '../redux/reducers';
 
-
-const splitName = name => {
-    const split = name.split(/[\/_]/);
-    const rtrn = {}
-    if (split.length === 1) {
-        rtrn.phase = split[0];
-        rtrn.iteration = ":DEFAULT:";
-        rtrn.fork = ":DEFAULT:";
-    }
-    if (split.length === 2) {
-        rtrn.phase = split[0];
-        rtrn.iteration = ":DEFAULT:"
-        rtrn.fork = split[1];
-    } else if (split.length === 3) {
-        rtrn.phase = split[0];
-        rtrn.iteration = split[1];
-        rtrn.fork = split[2];
-    }
-    return rtrn;
-}
+// const splitName = name => {
+//     const split = name.split(/[\/_]/);
+//     const rtrn = {}
+//     if (split.length === 1) {
+//         rtrn.phase = split[0];
+//         rtrn.iteration = ":DEFAULT:";
+//         rtrn.fork = ":DEFAULT:";
+//     }
+//     if (split.length === 2) {
+//         rtrn.phase = split[0];
+//         rtrn.iteration = ":DEFAULT:"
+//         rtrn.fork = split[1];
+//     } else if (split.length === 3) {
+//         rtrn.phase = split[0];
+//         rtrn.iteration = split[1];
+//         rtrn.fork = split[2];
+//     }
+//     return rtrn;
+// }
 
 export default () => {
     let { phaseId } = useParams();
@@ -70,9 +70,6 @@ export default () => {
                 return rtrn;
             }
         }).filter(v => v !== undefined);
-
-        console.log(`${split.phase} ${split.iteration === ":DEFAULT:" ? "" : split.iteration} ${metricName} histogram`,histo)
-
         const tickTransform = {}
         const ranges = {}
         histo.forEach((entry,idx,all) => {
