@@ -127,7 +127,7 @@ export default () => {
                                     <YAxis yAxisId={0} orientation="left" >
                                         <Label value="count" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
                                     </YAxis>
-                                    <Bar name="requests" yAxisId={0} dataKey='_bucketCount' isAnimationActive={false} dot={false} fill="#002F5D" stroke={"#002F5D"} style={{ strokeWidth: 2 }} />
+                                    <Bar name="requests" yAxisId={0} dataKey='_bucketCount' barSize={2} isAnimationActive={false} dot={false} fill="#002F5D" stroke={"#002F5D"} style={{ strokeWidth: 2 }} />
                                     <Tooltip content={<OverloadTooltip />} labelFormatter={rangeTickFormatter} />
                                 </ComposedChart>
                             )
