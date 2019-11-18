@@ -180,11 +180,6 @@ export default () => {
 
     const phases = useSelector(state => state.data.phase)
 
-    const phaseTransitionTs = getPhaseTransitionTs(phases 
-        // , v=>v.startTime-v.startTime%1000 
-        // , v=>v.endTime-v.endTime%1000
-    );
-
     const forkMap = useSelector(getForkMap)
 
     const phaseDomain = getDomain(phases);
@@ -192,6 +187,13 @@ export default () => {
     const zoom = useZoom();
 
     const [currentDomain, setDomain] = useState(phaseDomain);
+
+
+    const phaseTransitionTs = getPhaseTransitionTs(phases 
+        // , v=>v.startTime-v.startTime%1000 
+        // , v=>v.endTime-v.endTime%1000
+    ).filter(v=>v>currentDomain[0] && v<currentDomain[1]);
+
 
     const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
     const tsToHHmmss = (v) => DateTime.fromMillis(v).toFormat("HH:mm:ss")
