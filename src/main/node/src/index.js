@@ -20,11 +20,10 @@ import './index.css';
 
 import Header from './components/Header';
 
-//import App from './App';
 import configureStore, { history } from './redux/configureStore';
 
-
 import Summary from './pages/Summary';
+import Details from './pages/Details';
 import Phase from './pages/Phase';
 
 const data = window.__DATA__;
@@ -50,6 +49,7 @@ ReactDOM.render(
                 </Helmet>
             <CacheSwitch>
                 <CacheRoute exact path="/" component={Summary} />
+                <CacheRoute exact path="/details" component={Details} />
                 <Route path="/phase/:phaseId" render={
                     ({match})=>{
                         return (<Phase/>)

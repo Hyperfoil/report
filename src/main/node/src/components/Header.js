@@ -30,10 +30,15 @@ export default ({ logoProps = {} }) => {
             topNav={(
                 <Nav aria-label="Nav">
                     <NavList variant={NavVariants.horizontal}>
-                        <NavItem itemId={0} isActive={false}></NavItem>
+                        
                         <NavItem itemId={0} isActive={false}>
                             <NavLink exact={true} to="/" activeClassName="pf-m-current">
                                 Summary
+                            </NavLink>
+                        </NavItem>
+                        <NavItem itemId={0} isActive={false}>
+                            <NavLink exact={true} to="/details" activeClassName="pf-m-current">
+                                Details
                             </NavLink>
                         </NavItem>
                         {/* <NavItem itemId={1} isActive={false}>
