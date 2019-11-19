@@ -1,14 +1,21 @@
 import React, { useState, useRef } from 'react';
 import {
+    Button,
     Nav,
     PageHeader,
     NavItem,
     NavList,
     NavVariants,
+    Toolbar,
+    ToolbarGroup,
+    ToolbarItem,
 
 } from '@patternfly/react-core';
 import {
     CaretDownIcon,
+    ExclamationCircleIcon,
+    WarningTriangleIcon
+
 } from '@patternfly/react-icons';
 
 import Popover from '@material-ui/core/Popover';
@@ -16,7 +23,10 @@ import { NavLink } from 'react-router-dom';
 
 import { useSelector } from 'react-redux'
 
+import theme from '../theme';
+
 const getPhases = state=>[...new Set(state.data.total.map(v=>v.phase))]
+const getFailures = state=>state.data.failure
 
 export default ({ logoProps = {} }) => {
     const [open, setOpen] = useState(false)
@@ -24,13 +34,29 @@ export default ({ logoProps = {} }) => {
     const linkEl = useRef(null);
 
     const phases = useSelector(getPhases)
+    const failures = useSelector(getFailures)
 
     return (
         <PageHeader
+            toolbar={failures.length > 0 ? 
+                (
+                    <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+                        <ToolbarGroup>
+                            <ToolbarItem color={theme.colors.alert.danger[100]}>
+                                <Button variant="plain">
+                                    <ExclamationCircleIcon fill={theme.colors.alert.danger[100]}/>
+                                    {failures.length}
+                                </Button>
+                            </ToolbarItem>
+                        </ToolbarGroup>                        
+                    </Toolbar>
+                )
+                 :
+                null
+            }
             topNav={(
                 <Nav aria-label="Nav">
-                    <NavList variant={NavVariants.horizontal}>
-                        
+                    <NavList variant={NavVariants.horizontal}>                        
                         <NavItem itemId={0} isActive={false}>
                             <NavLink exact={true} to="/" activeClassName="pf-m-current">
                                 Summary
@@ -41,11 +67,6 @@ export default ({ logoProps = {} }) => {
                                 Details
                             </NavLink>
                         </NavItem>
-                        {/* <NavItem itemId={1} isActive={false}>
-                            <NavLink exact={true} to="/details" activeClassName="pf-m-current">
-                                Details
-                            </NavLink>
-                        </NavItem> */}
                         <NavItem itemId={2} isActive={false} onClick={(e, itemId) => { setOpen(!open) }}>
                             <span ref={linkEl} style={{ cursor: "pointer" }}>Phases<CaretDownIcon /></span>
                         </NavItem>
