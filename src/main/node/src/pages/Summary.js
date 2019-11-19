@@ -26,7 +26,7 @@ import {
 import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
 
-import {splitName} from '../redux/reducers';
+import { splitName } from '../redux/reducers';
 import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
 
@@ -126,22 +126,24 @@ const useZoom = () => {
 const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
 
-const getTotal = state=>state.data.total
-const makeForkMapper = (splitName)=>createSelector(
+const getTotal = state => state.data.total
+const getFailures = state => state.data.failure
+const makeForkMapper = (splitName) => createSelector(
     getTotal,
-    (total)=>forkMetricPhaseTotals(total,splitName)
+    (total) => forkMetricPhaseTotals(total, splitName)
 )
 const getForkMap = makeForkMapper(splitName);
 
 const getSection = createSelector(
-    [getTotal,makeForkMapper(splitName)],
-    (total,forkMap)=>{
+    [getTotal, makeForkMapper(splitName)],
+    (total, forkMap) => {
         return []
     }
 )
 
 export default () => {
     const total = useSelector(getTotal)
+    const failures = useSelector(getFailures)
     const forkMap = useSelector(getForkMap);
 
     const domain = [
@@ -155,22 +157,22 @@ export default () => {
     const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
     const tsToHHmmss = (v) => DateTime.fromMillis(v).toFormat("HH:mm:ss")
 
-    const [sectionState,setSectionState] = useState(()=>{
+    const [sectionState, setSectionState] = useState(() => {
         const sections = [];
         Object.keys(forkMap).forEach(forkName => {
             const fork = forkMap[forkName]
             Object.keys(fork).forEach(metricName => {
                 const metric = fork[metricName];
-    
+
                 const phases = new Set(
                     Object.values(metric).reduce((rtrn, array) => {
                         array.map(v => v.phase).forEach(n => rtrn.push(n));
                         return rtrn;
                     }, [])
                 )
-    
+
                 const filteredTotals = total.filter(v => phases.has(v.phase));
-    
+
                 const filteredPhaseTimes = phaseTimetable(
                     filteredTotals,
                     [
@@ -182,7 +184,7 @@ export default () => {
                         { name: "rps", accessor: v => v.summary.requestCount / ((v.end - v.start) / 1000) },
                     ]
                 )
-    
+
                 let colorIndex = -1;
                 const areas = [];
                 const rightLines = [];
@@ -198,7 +200,7 @@ export default () => {
                     }
                     const pallet = colors[colorNames[colorIndex]];
                     const phaseArray = metric[phaseName];
-                    
+
                     phaseArray.forEach(phase => {
                         stats.forEach((statName, statIndex) => {
                             const color = pallet[statIndex % pallet.length]
@@ -211,7 +213,7 @@ export default () => {
                                     unit="ns"
                                     fill={color}
                                     cursor={"pointer"}
-                                    onClick={(e) => { history.push('/phase/'+phase.phase.replace(/\//g, "_"))}}
+                                    onClick={(e) => { history.push('/phase/' + phase.phase.replace(/\//g, "_")) }}
                                     connectNulls
                                     type="monotone"
                                     yAxisId={0}
@@ -346,12 +348,30 @@ export default () => {
                 )
             })
         })
-    
+
         return sections;
 
     })
     return (
         <React.Fragment>
+            {failures.length > 0 ? (
+                <PageSection>
+                    {failures.map((failure, failureIndex) => {
+                        return (
+                            <div key={`failure.${failureIndex}`} className="pf-c-alert pf-m-danger pf-m-inline" aria-label="Inline danger alert">
+                                <div className="pf-c-alert__icon">
+                                    <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                </div>
+                                <h4 className="pf-c-alert__title">
+                                    <span className="pf-screen-reader">SLA Failure</span>SLA Failure: {failure.phase} {failure.metric}</h4>
+                                <div className="pf-c-alert__description">
+                                    <p>{failure.message}</p>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </PageSection>
+            ) : null}
             {sectionState}
         </React.Fragment>
     )

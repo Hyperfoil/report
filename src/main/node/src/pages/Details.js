@@ -25,12 +25,12 @@ import {
 } from 'recharts';
 import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
-import { splitName } from '../redux/reducers';
+import { buildName } from '../redux/reducers';
 import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
 
 const keyOrder = ['p99.999', 'p99.99', 'p99.9', 'p99.0', 'p90.0', 'p50.0', 'Mean'];
-const stats = ['99.9', '99.0', '90.0', '50.0', 'Mean'];
+const stats = ['99.99', '99.9', '99.0', '90.0', '50.0', 'Mean'];
 
 
 
@@ -50,7 +50,7 @@ const phasesTimetable = (metric = {}, stats = [], getStart = v => v.startTime, g
             const rtrnStart = rtrn[start] || { _areaKey: start }
             const rtrnEnd = rtrn[end] || { _areaKey: end }
 
-            const key = phaseName
+            const key = entry._pif;//phaseName
 
             stats.forEach((statName, statIndex) => {
                 let statKey, statValue
@@ -78,7 +78,7 @@ const phasesTimetable = (metric = {}, stats = [], getStart = v => v.startTime, g
     rtrn = Object.values(rtrn).sort((a, b) => a._areaKey - b._areaKey)
     return rtrn
 }
-const getPhaseTransitionTs = (phases = {}, getStart = (v)=>v.startTime, getEnd = v=>v.endTime) =>{
+const getPhaseTransitionTs = (phases = {}, getStart = (v) => v.startTime, getEnd = v => v.endTime) => {
     const rtrn = []
     Object.keys(phases).forEach(phaseName => {
         const phase = phases[phaseName];
@@ -89,9 +89,9 @@ const getPhaseTransitionTs = (phases = {}, getStart = (v)=>v.startTime, getEnd =
                 Object.keys(fork.metric).forEach(metricName => {
                     const metric = fork.metric[metricName]
                     rtrn.push(getStart(metric.series[0]))
-                    rtrn.push(getStart(metric.series[metric.series.length-1]))
+                    rtrn.push(getStart(metric.series[metric.series.length - 1]))
                     rtrn.push(getEnd(metric.series[0]))
-                    rtrn.push(getEnd(metric.series[metric.series.length-1]))                    
+                    rtrn.push(getEnd(metric.series[metric.series.length - 1]))
                 })
             })
         })
@@ -100,6 +100,7 @@ const getPhaseTransitionTs = (phases = {}, getStart = (v)=>v.startTime, getEnd =
 }
 const forkMetricPhase = (phases = {}, sortStart = (a, b) => a.startTime - b.startTime) => {
     const rtrn = {}
+    const pifs = new Set([]);
     Object.keys(phases).forEach(phaseName => {
         const phase = phases[phaseName];
         Object.keys(phase.iteration).forEach(iterationName => {
@@ -118,6 +119,9 @@ const forkMetricPhase = (phases = {}, sortStart = (a, b) => a.startTime - b.star
                         rtrn[forkName][metricName][phaseName] = []
                     }
                     metric.series.forEach(entry => {
+                        //TODO set the phase_iter_fork name on the entry so we prerve overlap?
+                        entry._pif = buildName(phaseName, iterationName, forkName);
+                        pifs.add(entry._pif)
                         rtrn[forkName][metricName][phaseName].push(entry);
                     })
                 })
@@ -134,7 +138,7 @@ const forkMetricPhase = (phases = {}, sortStart = (a, b) => a.startTime - b.star
             })
         })
     })
-    return rtrn;
+    return { forkMap: rtrn, phaseIds: [...pifs] };
 }
 
 const getForkMap = createSelector(
@@ -176,30 +180,10 @@ const useZoom = () => {
     };
 }
 
-export default () => {
+const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
+const tsToHHmmss = (v) => DateTime.fromMillis(v).toFormat("HH:mm:ss")
 
-    const phases = useSelector(state => state.data.phase)
-
-    const forkMap = useSelector(getForkMap)
-
-    const phaseDomain = getDomain(phases);
-
-    const zoom = useZoom();
-
-    const [currentDomain, setDomain] = useState(phaseDomain);
-
-
-    const phaseTransitionTs = getPhaseTransitionTs(phases 
-        // , v=>v.startTime-v.startTime%1000 
-        // , v=>v.endTime-v.endTime%1000
-    ).filter(v=>v>currentDomain[0] && v<currentDomain[1]);
-
-
-    const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
-    const tsToHHmmss = (v) => DateTime.fromMillis(v).toFormat("HH:mm:ss")
-
-    //putting in useState improves performance but breaks useZoom(), try useEffect?
-    //const [sectionState,setSectionState] = useState(()=>{
+const makeChart = (forkMap, currentDomain, phaseDomain, phaseIds, zoom, setDomain, phaseTransitionTs) => {
     const sections = [];
     Object.keys(forkMap).forEach(forkName => {
         const fork = forkMap[forkName]
@@ -218,6 +202,7 @@ export default () => {
             const timetable = phasesTimetable(
                 metric,
                 [
+                    { name: "99.99", accessor: v => v.percentileResponseTime['99.99'] },
                     { name: "99.9", accessor: v => v.percentileResponseTime['99.9'] },
                     { name: "99.0", accessor: v => v.percentileResponseTime['99.0'] },
                     { name: "90.0", accessor: v => v.percentileResponseTime['90.0'] },
@@ -233,6 +218,11 @@ export default () => {
                 (v.end >= currentDomain[0] && v.end <= currentDomain[1])
             )
 
+
+            console.log("timetable", timetable);
+            console.log("phaseIds", phaseIds);
+
+
             let colorIndex = -1;
             const areas = [];
             const rightLines = [];
@@ -244,37 +234,45 @@ export default () => {
                     colorIndex = 0;
                 }
                 const pallet = colors[colorNames[colorIndex]];
-                stats.forEach((statName, statIndex) => {
-                    const color = pallet[statIndex % pallet.length]
-                    areas.push(
-                        <Area
-                            key={phaseName + "_" + statName}
-                            name={statName}
-                            dataKey={phaseName + "_" + statName}
-                            stroke={color}
-                            unit="ns"
-                            fill={color}
-                            connectNulls={false}
-                            type="monotone"
-                            yAxisId={0}
+
+                phaseIds.filter(phaseId => phaseId.startsWith(phaseName)).forEach(phaseId => {
+
+                    stats.forEach((statName, statIndex) => {
+                        const color = pallet[statIndex % pallet.length]
+                        areas.push(
+                            <Area
+                                key={phaseId + "_" + statName}
+                                name={statName}
+                                dataKey={phaseId + "_" + statName}
+                                stroke={color}
+                                unit="ns"
+                                fill={color}
+                                connectNulls={true} //needs to be true for cases of overlap
+                                type="monotone"
+                                yAxisId={0}
+                                isAnimationActive={false}
+                                style={{ opacity: 0.5 }}
+                            />
+                        )
+                    })
+                    rightLines.push(
+                        <Line
+                            key={phaseId + "_rps"}
+                            yAxisId={1}
+                            name={"Requests/s"}
+                            dataKey={phaseId + "_rps"}
+                            stroke={"#A30000"}
+                            fill={"#A30000"}
+                            connectNulls={true}
+                            dot={false}
                             isAnimationActive={false}
+                            style={{ strokeWidth: 1 }}
                         />
                     )
+
+
                 })
-                rightLines.push(
-                    <Line
-                        key={phaseName+"_rps"}
-                        yAxisId={1}
-                        name={"Requests/s"}
-                        dataKey={phaseName+"_rps"}
-                        stroke={"#A30000"}
-                        fill={"#A30000"}
-                        connectNulls={false}
-                        dot={false}
-                        isAnimationActive={false}
-                        style={{ strokeWidth: 1}}
-                    />
-                )
+
                 legendPayload.push(
                     {
                         color: pallet[0],
@@ -283,7 +281,6 @@ export default () => {
                         value: phaseName
                     }
                 )
-
             })
             legendPayload.push(
                 {
@@ -327,11 +324,11 @@ export default () => {
                                         }}
                                         onMouseMove={e => {
                                             if (zoom.left) {
-                                                const r = e.activeLabel ? 
-                                                    e.activeLabel : 
-                                                    zoom.right > zoom.left ? 
-                                                        currentDomain[1] : 
-                                                        currentDomain[0]                                                
+                                                const r = e.activeLabel ?
+                                                    e.activeLabel :
+                                                    zoom.right > zoom.left ?
+                                                        currentDomain[1] :
+                                                        currentDomain[0]
                                                 zoom.setRight(r)
                                             }
                                             return false;
@@ -395,9 +392,29 @@ export default () => {
             )
         })
     })
-    //     return sections;
-    // })
+    return sections;
+}
+export default () => {
 
+    const phases = useSelector(state => state.data.phase)
+
+    const { forkMap, phaseIds } = useSelector(getForkMap)
+
+    const phaseDomain = getDomain(phases);
+
+    const zoom = useZoom();
+
+    const [currentDomain, setDomain] = useState(phaseDomain);
+
+    const phaseTransitionTs = getPhaseTransitionTs(phases
+        // , v=>v.startTime-v.startTime%1000 
+        // , v=>v.endTime-v.endTime%1000
+    ).filter(v => v > currentDomain[0] && v < currentDomain[1]);
+
+    const sections = useMemo(
+        ()=>makeChart(forkMap, currentDomain, phaseDomain, phaseIds, zoom, setDomain, phaseTransitionTs),
+        [forkMap, currentDomain, phaseDomain, phaseIds, zoom, setDomain, phaseTransitionTs]
+    );
     return (
         <React.Fragment>{sections}</React.Fragment>
     )

@@ -34,3 +34,13 @@ export const splitName = name => {
     }
     return rtrn;
 }
+export const buildName = (phase, iteration, fork, delim="/") => {
+    var rtrn = phase;
+    if (! (":DEFAULT:" === iteration) ) {
+        rtrn = rtrn + delim + iteration;
+    }
+    if (! (":DEFAULT:" === fork) ) {
+        rtrn = rtrn + delim + fork;
+    }
+    return rtrn;
+}
