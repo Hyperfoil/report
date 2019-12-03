@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,18 +29,20 @@ public class ReportGenerator implements Command {
    public static final String PHASE = "(?<phase>[^";
 
 
-   @Option(shortName = 's', required = true, description = "source folder or archive containing hyperfoil output files")
+   @Option(shortName = 's',name="source", required = true, description = "source folder or archive containing hyperfoil output files")
    private String source;
 
-   @Option(shortName = 'd', required = true, description = "destination for output report file")
+   @Option(shortName = 'd',name="destination", required = true, description = "destination for output report file")
    private String destination;
 
-   @Option(shortName = 't', required = false, description = "use a custom html template file", defaultValue = "")
+   @Option(shortName = 't',name="template", required = false, description = "use a custom html template file", defaultValue = "")
    private String template;
 
-   @Option(shortName = 'x', required = false, description = "replace token in html template file",defaultValue = DEFAULT_TOKEN)
+   @Option(shortName = 'x',name="token", required = false, description = "replace token in html template file",defaultValue = DEFAULT_TOKEN)
    private String token;
 
+   @Option(shortName = 'n',name = "name", required = false, description = "json file name",defaultValue = "all.json")
+   private String name;
 
    public static void main(String[] args) {
       AeshRuntimeRunner.builder().command(ReportGenerator.class).args(args).execute();
@@ -61,23 +64,32 @@ public class ReportGenerator implements Command {
       }
       Json loaded = new Json();
 
+      if( !Files.exists(Path.of(getSource())) ){
+         System.out.printf("Cannot find %s",getSource());
+         return CommandResult.FAILURE;
+      }
       if(FileUtility.isArchive(getSource())){
 
-         List<String> found = FileUtility.getArchiveEntries("all.json");
+         List<String> found = FileUtility.getArchiveEntries(name);
          if(!found.isEmpty()){
             loaded = Json.fromFile(getSource() + FileUtility.ARCHIVE_KEY+found.get(0));
          }else{
-            System.out.printf("failed to find all.json in archive %s",getSource());
-            System.exit(0);
+            System.out.printf("failed to find %s in archive %s",name, getSource());
+            return CommandResult.FAILURE;
          }
       }else{
-         List<String> found = FileUtility.getFiles(getSource(),"all.json",true);
-         if(!found.isEmpty()){
-            System.out.println("FOUND "+found.get(0));
-            loaded = Json.fromFile(found.get(0));
+         File f = new File(getSource());
+         if(f.isDirectory()) {
+            List<String> found = FileUtility.getFiles(getSource(), name, true);
+            if (!found.isEmpty()) {
+               System.out.println("FOUND " + found.get(0));
+               loaded = Json.fromFile(found.get(0));
+            } else {
+               System.out.printf("failed to find %s in %s", name, getSource());
+               return CommandResult.FAILURE;
+            }
          }else{
-            System.out.printf("failed to find all.json in %s",getSource());
-            System.exit(0);
+            loaded = Json.fromFile(getSource());
          }
       }
 
