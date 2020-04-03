@@ -1,6 +1,6 @@
 # compiled resources
-/resources/build
-/resources/index.html
+src/main/resources/build
+src/main/resources/index.html
 
 
 # output 
