@@ -1,7 +1,7 @@
 FROM alpine
 
 RUN apk add --update --no-cache lighttpd jq curl bash && rm -rf /var/cache/apk/*
-RUN chmod a+w /var/www/localhost/htdocs
+RUN chmod a+w /var/www/localhost/htdocs /var/log/lighttpd
 
 COPY src/main/resources/lighttpd/lighttpd.conf /etc/lighttpd/
 COPY src/main/resources/lighttpd/mod_cgi.conf /etc/lighttpd/
