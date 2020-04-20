@@ -12,10 +12,10 @@ TEMPLATE=${TEMPLATE:-/var/www/index.html}
 INPUT=$(mktemp /tmp/input.XXXXXX)
 cat | jq $SUBPATH > $INPUT
 ID=$(jq -r .info.id $INPUT)
-BENCHMARK=$(jq -r .info.benchmark $INPUT)
+BENCHMARK=${BENCHMARK:-$(jq -r .info.benchmark $INPUT)}
 
 FILE=${PREFIX}${ID}-${BENCHMARK}${SUFFIX}.html
-OUTPUT=/var/www/localhost/htdocs/$FILE
+OUTPUT=${OUTPUT:-/var/www/localhost/htdocs}/$FILE
 
 if [ -e $OUTPUT ]; then
    echo "Status: 409 Conflict"

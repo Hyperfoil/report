@@ -26,28 +26,30 @@ import {
 import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
 
-import { splitName } from '../redux/reducers';
+import {
+    getInfo,
+    getStats,
+    getForkMetricMap, 
+    getAllTotals, 
+    getAllFailures, 
+    getAllPhaseNames,
+    getAllForkNames,
+    getAllMetricNames,
+    getDomain,
+} from '../redux/selectors';
 import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
 
-const getPhases = state => state.data.total.map(v => v.phase)
-const getMetrics = state => [...new Set(state.data.total.map(v => v.metric))]
+const domainSelector = createSelector(
+    getStats(),
+    getDomain
+);
 
-const buildName = (phase, iteration, fork) => {
-    var rtrn = phase;
-    if (!iteration.equals(":DEFAULT:")) {
-        rtrn = rtrn + "/" + iteration;
-    }
-    if (!fork.equals(":DEFAULT:")) {
-        rtrn = rtrn + "/" + fork;
-    }
-    return rtrn;
-}
 
 //creates a sorted array of {[phase.metric_stat]:value} for use in rechart Area's in WideChart
-const phaseTimetable = (total = [], stats = [], getStart = v => v.start, getEnd = v => v.end, getKey = v => v.phase + "." + v.metric) => {
+const phaseTimetable = (data = [], stats = [], getStart = v => v.start, getEnd = v => v.end, getKey = v => v.phase + "." + v.metric) => {
     let rtrn = {}
-    total.forEach((entry, entryIndex) => {
+    data.forEach((entry, entryIndex) => {
         const start = getStart(entry);
         const end = getEnd(entry);
         const mid = (end / 2 + start / 2)
@@ -86,37 +88,8 @@ const phaseTimetable = (total = [], stats = [], getStart = v => v.start, getEnd 
     rtrn = Object.values(rtrn).sort((a, b) => a._areaKey - b._areaKey)
     return rtrn
 }
-//converts array with phaseNames to forkName.metricName = []
-const forkMetricPhaseTotals = (total = [], splitName = (name) => ({ phase: "", iteration: "", fork: "" }), getStart = (a, b) => a.start - b.start) => {
-    const rtrn = {}
-    total.forEach(entry => {
-        const split = splitName(entry.phase);
-        if (typeof rtrn[split.fork] === "undefined") {
-            rtrn[split.fork] = {}
-        }
-        if (typeof rtrn[split.fork][entry.metric] === "undefined") {
-            rtrn[split.fork][entry.metric] = {};
-        }
-        if (typeof rtrn[split.fork][entry.metric][split.phase] === "undefined") {
-            rtrn[split.fork][entry.metric][split.phase] = []
-        }
-        rtrn[split.fork][entry.metric][split.phase].push(entry)
-    })
-    Object.keys(rtrn).forEach(forkName => {
-        const fork = rtrn[forkName]
-        Object.keys(fork).forEach(metricName => {
-            const metric = fork[metricName];
-            Object.keys(metric).forEach(phaseName => {
-                const phaseArray = metric[phaseName];
-                phaseArray.sort(getStart);
-            })
-        })
-    })
-    return rtrn;
-}
 
-const keyOrder = ['p99.999', 'p99.99', 'p99.9', 'p99.0', 'p90.0', 'p50.0', 'Mean'];
-const stats = ['99.9', '99.0', '90.0', '50.0', 'Mean'];
+//const stats = ['99.9', '99.0', '90.0', '50.0', 'Mean'];
 
 const useZoom = () => {
     const [left, setLeft] = useState(false)
@@ -126,53 +99,250 @@ const useZoom = () => {
 const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
 
-const getTotal = state => state.data.total
-const getFailures = state => state.data.failure
-const makeForkMapper = (splitName) => createSelector(
-    getTotal,
-    (total) => forkMetricPhaseTotals(total, splitName)
-)
-const getForkMap = makeForkMapper(splitName);
-
-const getSection = createSelector(
-    [getTotal, makeForkMapper(splitName)],
-    (total, forkMap) => {
-        return []
-    }
-)
 
 export default () => {
-    const total = useSelector(getTotal)
-    const failures = useSelector(getFailures)
-    const forkMap = useSelector(getForkMap);
+    const stats = useSelector(getStats());
+    //const data = useSelector(getData);
+    const total = stats.map(v=>v.total);
+    const failures = useSelector(getAllFailures)
+    const info = useSelector(getInfo)
 
+    const forkNames = useSelector(getAllForkNames);
+    const metricNames = useSelector(getAllMetricNames);
+
+    const forkMap = useSelector(getForkMetricMap());
     const domain = [
-        Math.min(...total.map(v => v.start)),
-        Math.max(...total.map(v => v.end))
+        Math.min(...total.map(v => v.start || 0)),
+        Math.max(...total.map(v => v.end || 0))
     ]
+    console.log("domain",domain)
     const history = useHistory();
     const [zoom, setLeft, setRight] = useZoom();
-    const [currentDomain, setDomain] = useState(domain);
+
+    const fullDomain = useSelector(domainSelector);
+    const [currentDomain, setDomain] = useState(fullDomain);
+
+
+    console.log("currentDomain",currentDomain)
 
     const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
-    const tsToHHmmss = (v) => DateTime.fromMillis(v).toFormat("HH:mm:ss")
+    const tsToHHmmss = (v) => v ? DateTime.fromMillis(v).toFormat("HH:mm:ss") : ""
+
+    const statAccessors = [
+        { name: "99.9", accessor: v => v.summary.percentileResponseTime['99.9'] },
+        { name: "99.0", accessor: v => v.summary.percentileResponseTime['99.0'] },
+        { name: "90.0", accessor: v => v.summary.percentileResponseTime['90.0'] },
+        { name: "50.0", accessor: v => v.summary.percentileResponseTime['50.0'] },
+        { name: "Mean", accessor: v => v.summary.meanResponseTime },
+        { name: "rps", accessor: v => v.summary.requestCount / ((v.end - v.start) / 1000) },
+    ]
+    const statAccessorLeftNames = statAccessors
+        .map(v => typeof v === "string" ? v : v.name)
+        .filter(v=>v!=="rps")
+
+    const codeAccessors = [
+        { name: "2xx", accessor: v => v.summary.status_2xx},
+        { name: "3xx", accessor: v => v.summary.status_3xx},
+        { name: "4xx", accessor: v => v.summary.status_4xx},
+        { name: "5xx", accessor: v => v.summary.status_5xx}        
+    ]
+
+    const sections = useMemo(()=>{
+        if(currentDomain[0] !== fullDomain[0] || currentDomain[1] !== fullDomain[1]){
+            setDomain(fullDomain)
+        }
+        const rtrn = []
+        forkNames.forEach(forkName=>{
+            metricNames.forEach(metricName=>{
+                const forkMetric_stats = stats.filter(v=>v.fork === forkName && v.metric === metricName)
+                const phaseNames = [... new Set(forkMetric_stats.map(v=>v.phase))]
+                phaseNames.sort();
+                
+                if(forkMetric_stats.length > 0){
+                    //const phaseIds = [... new Set(forkMetric_stats.map(v=>v.name))]
+                    const totals = forkMetric_stats.map(v=>v.total)
+                    const chartStatTable = phaseTimetable(
+                        totals,
+                        statAccessors
+                    )
+                    console.log({forkName,metricName,totals,chartStatTable})
+
+                    let colorIndex = -1;
+                    const areas = []
+                    const rightLines = []
+                    const legendPayload = []
+                    phaseNames.forEach((phaseName)=>{
+                        colorIndex++;
+                        if(colorIndex >= colorNames.length){
+                            colorIndex = 0;
+                        }
+                        const pallet = colors[colorNames[colorIndex]];
+                        const phaseStats = forkMetric_stats.filter(v=>v.phase === phaseName)
+                        phaseStats.forEach(phase => {
+                            statAccessorLeftNames.forEach((statName,statIndex) => {
+                                const color = pallet[statIndex % pallet.length]
+                                const key = `${phase.name}.${metricName}_${statName}`
+                                console.log("Area key",key)
+                                areas.push(
+                                    <Area
+                                        key={key}
+                                        dataKey={key}
+                                        name={statName}
+                                        stroke={color}
+                                        unit="ns"
+                                        fill={color}
+                                        cursor={"pointer"}
+                                        onClick={e=>history.push(`/phase/${phase.phase}`)}
+                                        connectNulls
+                                        type="monotone"
+                                        yAxisId={0}
+                                        isAnimationActive={false}
+                                    />
+                                )
+                            })
+                            rightLines.push(
+                                <Line
+                                    key={`${phase.name}.${metricName}_rps`}
+                                    yAxisId={1}
+                                    name="Requests/s"
+                                    dataKey={`${phase.name}.${metricName}_rps`}
+                                    stroke={"#A30000"}
+                                    fill={"#A30000"}
+                                    connectNulls={true}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                    style={{ strokeWidth: 2 }}
+                                />
+                            )
+                        })
+                        legendPayload.push({
+                            color: pallet[0],
+                            fill: pallet[0],
+                            type: 'rect',
+                            value: phaseName
+                        })
+                    })
+                    legendPayload.push({
+                        color: '#A30000',
+                        fill: '#A30000',
+                        type: 'rect',
+                        value: "Requests/s"
+                    })
+
+                    const tooltipExtra = [
+                        (v) => {
+                            const duration = (v.end - v.start) / 1000
+                            return {
+                                color: 'grey',
+                                name: 'duration',
+                                value: duration,
+                                unit: 's'
+                            }
+                        }
+                    ]
+
+                    rtrn.push(
+                        <React.Fragment key={`${forkName}.${metricName}`}>
+                            <PageSection>
+                                <Card style={{ pageBreakInside: 'avoid' }}>
+                                    <CardHeader>
+                                        <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+                                            <ToolbarGroup><ToolbarItem>{`${forkName} ${metricName} response times`}</ToolbarItem></ToolbarGroup>
+                                        </Toolbar>
+                                    </CardHeader>
+                                    <CardBody style={{ minHeight: 400 }}>
+                                        <AutoSizer>{({ height, width }) => (
+                                            <ComposedChart
+                                                width={width}
+                                                height={height}
+                                                data={chartStatTable}
+                                                onMouseDown={e => {
+                                                    if (e) {
+                                                        setLeft(e.activeLabel);
+                                                        setRight(e.activeLabel)
+                                                    }
+                                                }}
+                                                onMouseMove={e => {
+                                                    if (zoom[0]) {
+                                                        setRight(e.activeLabel)
+                                                    }
+                                                    return false;
+                                                }}
+                                                onMouseUp={e => {
+                                                    if (zoom[0] && zoom[1] && zoom[0] !== zoom[1]) {
+                                                        let newDomain = zoom;
+                                                        if (zoom[0] > zoom[1]) {
+                                                            newDomain = [zoom[1], zoom[0]];
+                                                        }
+                                                        setDomain(newDomain);
+                                                    }
+                                                    setLeft(false);
+                                                    setRight(false)
+                                                }}
+                                                style={{ userSelect: 'none' }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis
+                                                    allowDataOverflow={true}
+                                                    type="number"
+                                                    scale="time"
+                                                    dataKey="_areaKey"
+                                                    tickFormatter={tsToHHmmss}
+                                                    //domain={domain}
+                                                    domain={currentDomain}
+                                                />
+                                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} >
+                                                    <Label value="response time" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
+                                                    {/* <Label value="response time" position="top" angle={0} offset={0} textAnchor='start' style={{ textAnchor: 'start' }} /> */}
+                                                </YAxis>
+                                                <YAxis yAxisId={1} orientation="right" style={{ fill: '#A30000' }}>
+                                                    <Label value={"Requests/s"} position="insideRight" angle={-90} style={{ fill: '#A30000' }} />
+                                                    {/* <Label value="requests" position="top" angle={0} textAnchor='end' style={{ textAnchor: 'end' }} /> */}
+                                                </YAxis>
+                                                <Tooltip
+                                                    content={
+                                                        <OverloadTooltip
+                                                            active={true}
+                                                            extra={tooltipExtra}
+                                                        />
+                                                    }
+                                                    labelFormatter={tsToHHmmss}
+                                                    formatter={(e) => Number(e).toFixed(0)}
+                                                />
+                                                <Legend payload={legendPayload} align="left" />
+                                                {areas}
+                                                {rightLines}
+                                                {zoom[0] && zoom[1] ?
+                                                    (<ReferenceArea yAxisId={0} x1={zoom[0]} x2={zoom[1]} strokeOpacity={0.3} />)
+                                                    : undefined
+                                                }
+                                            </ComposedChart>
+                                        )}</AutoSizer>
+                                    </CardBody>
+                                </Card>
+                            </PageSection>
+                        </React.Fragment>
+                    )
+                }
+            })
+        })
+        return rtrn;
+    },[stats,forkNames,metricNames,statAccessors,currentDomain,setDomain])
 
     const [sectionState, setSectionState] = useState(() => {
         const sections = [];
+
         Object.keys(forkMap).forEach(forkName => {
             const fork = forkMap[forkName]
             Object.keys(fork).forEach(metricName => {
                 const metric = fork[metricName];
-
                 const phases = new Set(
                     Object.values(metric).reduce((rtrn, array) => {
                         array.map(v => v.phase).forEach(n => rtrn.push(n));
                         return rtrn;
                     }, [])
                 )
-
-                const filteredTotals = total.filter(v => phases.has(v.phase));
-
+                const filteredTotals = stats.filter(v => phases.has(v.phase)).map(v=>v.total);
                 const filteredPhaseTimes = phaseTimetable(
                     filteredTotals,
                     [
@@ -200,15 +370,16 @@ export default () => {
                     }
                     const pallet = colors[colorNames[colorIndex]];
                     const phaseArray = metric[phaseName];
-
                     phaseArray.forEach(phase => {
                         stats.forEach((statName, statIndex) => {
                             const color = pallet[statIndex % pallet.length]
+                            const key = `${phase.name}.${metricName}_${statName}`
+                            console.log("statName",statName)
                             areas.push(
                                 <Area
-                                    key={phase.phase + "." + metricName + "_" + statName}
+                                    key={key}
                                     name={statName}
-                                    dataKey={phase.phase + "." + metricName + "_" + statName} //TODO create fn to share with phaseTimetable(getKey)
+                                    dataKey={key} //TODO create fn to share with phaseTimetable(getKey)
                                     stroke={color}
                                     unit="ns"
                                     fill={color}
@@ -223,10 +394,10 @@ export default () => {
                         })
                         rightLines.push(
                             <Line
-                                key={phase.phase + "." + metricName + "_rps"} //has to be unique or it is ignored by recharts
+                                key={phase.name + "." + metricName + "_rps"} //has to be unique or it is ignored by recharts
                                 yAxisId={1}
                                 name={"Requests/s"}
-                                dataKey={phase.phase + "." + metricName + "_rps"}
+                                dataKey={phase.name + "." + metricName + "_rps"}
                                 stroke={"#A30000"}
                                 fill={"#A30000"}
                                 connectNulls={true}
@@ -354,6 +525,21 @@ export default () => {
     })
     return (
         <React.Fragment>
+            <PageSection>
+                <Card>
+                    <CardBody>
+                        <div className="pf-c-content">
+                            <dl>
+                                <dt>benchmark</dt><dd>{info.benchmark}</dd>
+                                {info.description ? (<React.Fragment><dt>description</dt><dd>{info.description}</dd></React.Fragment>) : null}
+                                <dt>id</dt><dd>{info.id}</dd>
+                                <dt>start</dt><dd>{tsToHHmmss(info.startTime)}</dd>
+                                <dt>end</dt><dd>{tsToHHmmss(info.terminateTime)}</dd>
+                            </dl>
+                        </div>
+                    </CardBody>
+                </Card>
+            </PageSection>
             {failures.length > 0 ? (
                 <PageSection>
                     {failures.map((failure, failureIndex) => {
@@ -372,7 +558,7 @@ export default () => {
                     })}
                 </PageSection>
             ) : null}
-            {sectionState}
+            {sections}
         </React.Fragment>
     )
 }

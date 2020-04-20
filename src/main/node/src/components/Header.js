@@ -22,19 +22,18 @@ import Popover from '@material-ui/core/Popover';
 import { NavLink } from 'react-router-dom';
 
 import { useSelector } from 'react-redux'
+import { getAllNames, getAllFailures } from '../redux/selectors';
 
 import theme from '../theme';
 
-const getPhases = state=>[...new Set(state.data.total.map(v=>v.phase))]
-const getFailures = state=>state.data.failure
 
 export default ({ logoProps = {} }) => {
     const [open, setOpen] = useState(false)
     // const [search, setSearch] = useState("")
     const linkEl = useRef(null);
 
-    const phases = useSelector(getPhases)
-    const failures = useSelector(getFailures)
+    const phases = useSelector(getAllNames)
+    const failures = useSelector(getAllFailures)
 
     return (
         <PageHeader
@@ -56,7 +55,7 @@ export default ({ logoProps = {} }) => {
             }
             topNav={(
                 <Nav aria-label="Nav">
-                    <NavList variant={NavVariants.horizontal}>                        
+                    <NavList variant={NavVariants.horizontal}>
                         <NavItem itemId={0} isActive={false}>
                             <NavLink exact={true} to="/" activeClassName="pf-m-current">
                                 Summary
@@ -70,6 +69,13 @@ export default ({ logoProps = {} }) => {
                         <NavItem itemId={2} isActive={false} onClick={(e, itemId) => { setOpen(!open) }}>
                             <span ref={linkEl} style={{ cursor: "pointer" }}>Phases<CaretDownIcon /></span>
                         </NavItem>
+                        {failures && !failures.length === 0 ?
+                            <NavItem itemId={0} isActive={false}>
+                                <NavLink exact={true} to="/failures" activeClassName="pf-m-current">
+                                    Failures
+                                </NavLink>
+                            </NavItem> : null
+                        }
                     </NavList>
                     <Popover id="phases" open={open} anchorEl={linkEl.current} onClose={(e) => { setOpen(false) }} anchorOrigin={{
                         vertical: 'bottom',
@@ -84,7 +90,7 @@ export default ({ logoProps = {} }) => {
                             <nav className="pf-c-nav">
                                 <ul className="pf-c-nav__simple-list" role="menu" onClick={e => setOpen(false)}>
                                     {phases.map((phaseName, phaseIndex) => {
-                                        const safeName = phaseName.replace(/\//g, "_")
+                                        const safeName = phaseName;//.replace(/\//g, "_")
                                         return (
                                             <li role="none" key={phaseIndex} className="pf-c-nav__item">
                                                 <NavLink className="pf-c-nav__link" to={"/phase/" + safeName}>{safeName}</NavLink>

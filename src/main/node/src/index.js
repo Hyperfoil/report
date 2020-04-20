@@ -20,16 +20,14 @@ import './index.css';
 
 import Header from './components/Header';
 
-import configureStore, { history } from './redux/configureStore';
 
 import Summary from './pages/Summary';
 import Details from './pages/Details';
 import Phase from './pages/Phase';
+import Failures from './pages/Failures';
 
-const data = window.__DATA__;
-delete window.__DATA__;
-console.log("data",data)
-const store = configureStore(data)
+import store, {history} from './redux/store';
+
 const logoProps = {
     href: '/',
     onClick: (e) => {
@@ -50,11 +48,12 @@ ReactDOM.render(
             <CacheSwitch>
                 <CacheRoute exact path="/" component={Summary} />
                 <CacheRoute exact path="/details" component={Details} />
-                <Route path="/phase/:phaseId" render={
+                <Route path="/phase/:phaseId*" render={
                     ({match})=>{
                         return (<Phase/>)
                     }
                 } />
+                <Route path="/failures" component={Failures} />
             </CacheSwitch>
             </Page>
         </ConnectedRouter>

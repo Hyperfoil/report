@@ -62,7 +62,6 @@ import { DateTime, Duration } from 'luxon';
 import { AutoSizer } from 'react-virtualized';
 
 //import data from './result.json';
-import DataTable from './components/DataTable';
 
 import HistoChart, { getHisto } from './components/HistoChart';
 import WideBarChart, { getAreaBars } from './components/WideBarChart';
