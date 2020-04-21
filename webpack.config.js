@@ -22,6 +22,9 @@ class BashHook {
 
       const html = fs.readFileSync(path.resolve(__dirname,"build/index.embedded.html")).toString();
       const index = html.indexOf(TOKEN)
+      if ( index < 0 ){
+        throw "could not find TOKEN in template"
+      }
       fs.mkdirSync(path.resolve(__dirname,"build"),{recursive:true});
       fs.writeFileSync(path.resolve(__dirname,"build/report.sh"),
 `#!/bin/bash
@@ -29,8 +32,8 @@ class BashHook {
 cat > /tmp/index.html << 'EOF'
 ${html.substring(0,index)}
 EOF
-cat >> /tmp/index.html << 'EOF'
-window.__DATA__ = ['a','b','c']
+cat >> /tmp/index.html << EOF
+    window.__DATA__ = JSON.parse("\`cat \${1:-/dev/stdin} | sed 's/\\\"/\\\\\\"/g'\`")
 EOF
 cat >> /tmp/index.html << 'EOF'
 ${html.substring(index+TOKEN.length)}

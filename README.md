@@ -1,27 +1,40 @@
 # Hyperfoil reports
-Generate html reports from the Hyperfoil output csv files. The report is a self contained html file with embedded javascript, css, and run data. 
+Generate html reports from the Hyperfoil output all.json file. The report is a self contained html file with embedded javascript, css, and run data. 
 Reports can easily grow to several MB.
 **NOTE** The reports do not embed the patternfly4 fonts. This results in several 404's when opening a report and is being discussed
 
 ```
-java -cp... -jar report.jar -s /tmp/Hyperfoil/reports/0001 -d /tmp/index.html
+TODO make the report.sh usable to import json
 ```
 
 ## Building
 ```
-mvn clean install
+npm install
+npm build
 ```
-The report tool consists of a java class to compile the Hyperfoil csv files into json and a nodejs project to create the html template.
-`mvn clean install` will build the nodejs project and embed the javascript and css into a index.html template in `src/main/resources`
-and in the resulting jar.
+## Usage
+There are 3 supported use cases
+Shell script
+build/report.sh accepts a json input and generates a standalone html document with the json and javascript embedded inside. 
+The report can be opened in a browser without internet access or a local webserver.
+`cat all.json | ./build/report.sh`
+
+`./build/report.sh /tmp/all.json`
+
+Hosted html with embedded javascript
+The report.sh script creates a standalone html page with embedded json and javascript but the template html page can also load json
+via the data query parameter. Copy the build/index.embedded.html as index.html into the webserver folder with any json files and open 
+a browser to index.html?data=http://hostname/all.json
+
+Hosted html with separate assets
+Hosting `build/index.html` along with the `build/static` folder (and all contents) supports the same `?data` query parameter 
+
+
 
 ## Developing
-The node project is based on `create-react-app` and uses `yarn` for package management. 
-This means you need to download node and add it to the path then install yarn with `npm install -g yarn` if you do not already have them 
-
-run `yarn install` from the `src/main/node` directory for first time setup. Use `yarn start` to launch the react hot reload server but 
-first create an index.html in `src/main/node/public` with data from a Hyperfoil run.
-```
-java -cp... -jar report.jar -s /tmp/Hyperfoil/reports/0001 -d ${PROJECT_HOME}/src/main/node/public/index.html 
-``` 
-This will embed the json data in the index.hml and the hot reload server will add the javascript and css 
+The project is based on `create-react-app` and uses `npm` for package management. 
+This means you need to download node and add it to the path
+Run `npm install` from the base directory for first time setup. 
+Use `npm start` to launch the react hot reload server which will open localhost:3000 in your browser.
+The default index.html does not have embedded data. You can either add an all.json to the public folder and add `?data=http://localhost:3000/all.json`
+to the url or embed json data by replacing [/**DATAKEY**/] with the json data.
