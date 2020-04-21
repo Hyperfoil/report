@@ -13,14 +13,14 @@ const favicon = "data:image/jpeg;base64,"+fs.readFileSync(path.resolve(__dirname
 
 const TOKEN = "window.__DATA__ = [/**DATAKEY**/];"
 
-class DoneHook {
+class BashHook {
   apply(compiler){
     console.log("new DoneHook()")
     compiler.hooks.done.tap('DoneHook',(stats)=>{
 
       console.log("MYCALLBACK")
 
-      const html = fs.readFileSync(path.resolve(__dirname,"build/index.html")).toString();
+      const html = fs.readFileSync(path.resolve(__dirname,"build/index.embedded.html")).toString();
       const index = html.indexOf(TOKEN)
       fs.mkdirSync(path.resolve(__dirname,"build"),{recursive:true});
       fs.writeFileSync(path.resolve(__dirname,"build/report.sh"),
@@ -69,9 +69,10 @@ module.exports = {
         inlineSource: '.(js|css)$', // embed all javascript and css inline
         template: './public/index.template.html',
         inlineFavicon: favicon,
+        filename: 'index.embedded.html'
         //favicon: "./public/favicon.ico",
       }),
       new HtmlWebpackInlineSourcePlugin(),
-      new DoneHook()
+      new BashHook()
     ],
 }

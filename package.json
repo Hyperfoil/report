@@ -36,6 +36,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "yarn install && yarn run build:react && yarn run build:bundle",
+    "build:foo":"react-scripts build",
     "build:react": "INLINE_RUNTIME_CHUNK=false react-scripts build",
     "build:bundle": "PUBLIC_URL='/' webpack --config webpack.config.js",
     "test": "react-scripts test",
