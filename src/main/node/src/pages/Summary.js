@@ -115,7 +115,6 @@ export default () => {
         Math.min(...total.map(v => v.start || 0)),
         Math.max(...total.map(v => v.end || 0))
     ]
-    console.log("domain",domain)
     const history = useHistory();
     const [zoom, setLeft, setRight] = useZoom();
 
@@ -123,7 +122,6 @@ export default () => {
     const [currentDomain, setDomain] = useState(fullDomain);
 
 
-    console.log("currentDomain",currentDomain)
 
     const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
     const tsToHHmmss = (v) => v ? DateTime.fromMillis(v).toFormat("HH:mm:ss") : ""
@@ -165,7 +163,6 @@ export default () => {
                         totals,
                         statAccessors
                     )
-                    console.log({forkName,metricName,totals,chartStatTable})
 
                     let colorIndex = -1;
                     const areas = []
@@ -182,7 +179,6 @@ export default () => {
                             statAccessorLeftNames.forEach((statName,statIndex) => {
                                 const color = pallet[statIndex % pallet.length]
                                 const key = `${phase.name}.${metricName}_${statName}`
-                                console.log("Area key",key)
                                 areas.push(
                                     <Area
                                         key={key}
@@ -329,200 +325,6 @@ export default () => {
         return rtrn;
     },[stats,forkNames,metricNames,statAccessors,currentDomain,setDomain])
 
-    const [sectionState, setSectionState] = useState(() => {
-        const sections = [];
-
-        Object.keys(forkMap).forEach(forkName => {
-            const fork = forkMap[forkName]
-            Object.keys(fork).forEach(metricName => {
-                const metric = fork[metricName];
-                const phases = new Set(
-                    Object.values(metric).reduce((rtrn, array) => {
-                        array.map(v => v.phase).forEach(n => rtrn.push(n));
-                        return rtrn;
-                    }, [])
-                )
-                const filteredTotals = stats.filter(v => phases.has(v.phase)).map(v=>v.total);
-                const filteredPhaseTimes = phaseTimetable(
-                    filteredTotals,
-                    [
-                        { name: "99.9", accessor: v => v.summary.percentileResponseTime['99.9'] },
-                        { name: "99.0", accessor: v => v.summary.percentileResponseTime['99.0'] },
-                        { name: "90.0", accessor: v => v.summary.percentileResponseTime['90.0'] },
-                        { name: "50.0", accessor: v => v.summary.percentileResponseTime['50.0'] },
-                        { name: "Mean", accessor: v => v.summary.meanResponseTime },
-                        { name: "rps", accessor: v => v.summary.requestCount / ((v.end - v.start) / 1000) },
-                    ]
-                )
-
-                let colorIndex = -1;
-                const areas = [];
-                const rightLines = [];
-                const legendPayload = []
-
-                const phaseNames = [...Object.keys(metric)];
-                phaseNames.sort();
-
-                phaseNames.forEach((phaseName, phaseIndex, phaseNames) => {
-                    colorIndex++;
-                    if (colorIndex >= colorNames.length) {
-                        colorIndex = 0;
-                    }
-                    const pallet = colors[colorNames[colorIndex]];
-                    const phaseArray = metric[phaseName];
-                    phaseArray.forEach(phase => {
-                        stats.forEach((statName, statIndex) => {
-                            const color = pallet[statIndex % pallet.length]
-                            const key = `${phase.name}.${metricName}_${statName}`
-                            console.log("statName",statName)
-                            areas.push(
-                                <Area
-                                    key={key}
-                                    name={statName}
-                                    dataKey={key} //TODO create fn to share with phaseTimetable(getKey)
-                                    stroke={color}
-                                    unit="ns"
-                                    fill={color}
-                                    cursor={"pointer"}
-                                    onClick={(e) => { history.push('/phase/' + phase.phase.replace(/\//g, "_")) }}
-                                    connectNulls
-                                    type="monotone"
-                                    yAxisId={0}
-                                    isAnimationActive={false}
-                                />
-                            )
-                        })
-                        rightLines.push(
-                            <Line
-                                key={phase.name + "." + metricName + "_rps"} //has to be unique or it is ignored by recharts
-                                yAxisId={1}
-                                name={"Requests/s"}
-                                dataKey={phase.name + "." + metricName + "_rps"}
-                                stroke={"#A30000"}
-                                fill={"#A30000"}
-                                connectNulls={true}
-                                dot={false}
-                                isAnimationActive={false}
-                                style={{ strokeWidth: 2 }}
-                            />
-                        )
-                    })
-                    legendPayload.push(
-                        {
-                            color: pallet[0],
-                            fill: pallet[0],
-                            type: 'rect',
-                            value: phaseName
-                        }
-                    )
-                })
-                legendPayload.push(
-                    {
-                        color: '#A30000',
-                        fill: '#A30000',
-                        type: 'rect',
-                        value: 'Requests/s'
-                    }
-                )
-                const tooltipExtra = [
-                    (v) => {
-                        const duration = (v.end - v.start) / 1000
-                        return {
-                            color: "grey",
-                            name: "duration",
-                            value: duration,
-                            unit: 's'
-                        }
-                    }
-                ]
-                sections.push(
-                    <PageSection key={forkName + "." + metricName}>
-                        <Card style={{ pageBreakInside: 'avoid' }}>
-                            <CardHeader>
-                                <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-                                    <ToolbarGroup><ToolbarItem>{`${forkName === ":DEFAULT:" ? "" : forkName} ${metricName === ":DEFAULT:" ? "" : metricName} response times`}</ToolbarItem></ToolbarGroup>
-                                </Toolbar>
-                            </CardHeader>
-                            <CardBody style={{ minHeight: 400 }}>
-                                <AutoSizer>{({ height, width }) => {
-                                    return (
-                                        <ComposedChart
-                                            width={width}
-                                            height={height}
-                                            data={filteredPhaseTimes}
-                                            onMouseDown={e => {
-                                                if (e) {
-                                                    setLeft(e.activeLabel);
-                                                    setRight(e.activeLabel)
-                                                }
-                                            }}
-                                            onMouseMove={e => {
-                                                if (zoom[0]) {
-                                                    setRight(e.activeLabel)
-                                                }
-                                                return false;
-                                            }}
-                                            onMouseUp={e => {
-                                                if (zoom[0] && zoom[1] && zoom[0] !== zoom[1]) {
-                                                    let newDomain = zoom;
-                                                    if (zoom[0] > zoom[1]) {
-                                                        newDomain = [zoom[1], zoom[0]];
-                                                    }
-                                                    setDomain(newDomain);
-                                                }
-                                                setLeft(false);
-                                                setRight(false)
-                                            }}
-                                            style={{ userSelect: 'none' }}
-                                        >
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis
-                                                allowDataOverflow={true}
-                                                type="number"
-                                                scale="time"
-                                                dataKey="_areaKey"
-                                                tickFormatter={tsToHHmmss}
-                                                //domain={domain}
-                                                domain={currentDomain}
-                                            />
-                                            <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} >
-                                                <Label value="response time" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
-                                                {/* <Label value="response time" position="top" angle={0} offset={0} textAnchor='start' style={{ textAnchor: 'start' }} /> */}
-                                            </YAxis>
-                                            <YAxis yAxisId={1} orientation="right" style={{ fill: '#A30000' }}>
-                                                <Label value={"Requests/s"} position="insideRight" angle={-90} style={{ fill: '#A30000' }} />
-                                                {/* <Label value="requests" position="top" angle={0} textAnchor='end' style={{ textAnchor: 'end' }} /> */}
-                                            </YAxis>
-                                            <Tooltip
-                                                content={
-                                                    <OverloadTooltip
-                                                        active={true}
-                                                        extra={tooltipExtra}
-                                                    />
-                                                }
-                                                labelFormatter={tsToHHmmss}
-                                                formatter={(e) => Number(e).toFixed(0)}
-                                            />
-                                            <Legend payload={legendPayload} align="left" />
-                                            {areas}
-                                            {rightLines}
-                                            {zoom[0] && zoom[1] ?
-                                                (<ReferenceArea yAxisId={0} x1={zoom[0]} x2={zoom[1]} strokeOpacity={0.3} />)
-                                                : undefined
-                                            }
-                                        </ComposedChart>
-                                    )
-                                }}</AutoSizer>
-                            </CardBody>
-                        </Card>
-                    </PageSection>
-                )
-            })
-        })
-
-        return sections;
-
-    })
     return (
         <React.Fragment>
             <PageSection>
@@ -535,6 +337,12 @@ export default () => {
                                 <dt>id</dt><dd>{info.id}</dd>
                                 <dt>start</dt><dd>{tsToHHmmss(info.startTime)}</dd>
                                 <dt>end</dt><dd>{tsToHHmmss(info.terminateTime)}</dd>
+                                {info.errors && info.errors.length > 0 ? (
+                                    <React.Fragment>
+                                        <dt>errors</dt>
+                                        {info.errors.map((error,idx)=>(<dd key={idx}>{error.agent} {error.msg}</dd>))}
+                                    </React.Fragment>
+                                ) : null}
                             </dl>
                         </div>
                     </CardBody>

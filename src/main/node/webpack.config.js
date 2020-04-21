@@ -11,6 +11,8 @@ const favicon = "data:image/jpeg;base64,"+fs.readFileSync(path.resolve(__dirname
 //TODO fails to load webfonts correctly
 //may need to use a custom build of patternfly4 with cdn?
 
+const TOKEN = "window.__DATA__ = [/**DATAKEY**/];"
+
 class DoneHook {
   apply(compiler){
     console.log("new DoneHook()")
@@ -18,13 +20,22 @@ class DoneHook {
 
       console.log("MYCALLBACK")
 
-      const html = fs.readFileSync(path.resolve(__dirname,"public/index.template.html")).toString();
+      const html = fs.readFileSync(path.resolve(__dirname,"build/index.html")).toString();
+      const index = html.indexOf(TOKEN)
       fs.mkdirSync(path.resolve(__dirname,"build"),{recursive:true});
       fs.writeFileSync(path.resolve(__dirname,"build/report.sh"),
-      `#!/bin/bash
-      #TODO create script :)
-
-      `
+`#!/bin/bash
+#TODO create script :)
+cat > /tmp/index.html << 'EOF'
+${html.substring(0,index)}
+EOF
+cat >> /tmp/index.html << 'EOF'
+window.__DATA__ = ['a','b','c']
+EOF
+cat >> /tmp/index.html << 'EOF'
+${html.substring(index+TOKEN.length)}
+EOF
+`
       );
     })
   }
