@@ -89,8 +89,6 @@ const phaseTimetable = (data = [], stats = [], getStart = v => v.start, getEnd =
     return rtrn
 }
 
-//const stats = ['99.9', '99.0', '90.0', '50.0', 'Mean'];
-
 const useZoom = () => {
     const [left, setLeft] = useState(false)
     const [right, setRight] = useState(false)
@@ -99,28 +97,19 @@ const useZoom = () => {
 const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
 
-
 export default () => {
     const stats = useSelector(getStats());
-    //const data = useSelector(getData);
-    const total = stats.map(v=>v.total);
     const failures = useSelector(getAllFailures)
     const info = useSelector(getInfo)
 
     const forkNames = useSelector(getAllForkNames);
     const metricNames = useSelector(getAllMetricNames);
 
-    const forkMap = useSelector(getForkMetricMap());
-    const domain = [
-        Math.min(...total.map(v => v.start || 0)),
-        Math.max(...total.map(v => v.end || 0))
-    ]
     const history = useHistory();
     const [zoom, setLeft, setRight] = useZoom();
 
     const fullDomain = useSelector(domainSelector);
     const [currentDomain, setDomain] = useState(fullDomain);
-
 
 
     const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
@@ -146,6 +135,7 @@ export default () => {
     ]
 
     const sections = useMemo(()=>{
+        console.log("creating Summary sections")
         if(currentDomain[0] !== fullDomain[0] || currentDomain[1] !== fullDomain[1]){
             setDomain(fullDomain)
         }
@@ -157,13 +147,11 @@ export default () => {
                 phaseNames.sort();
                 
                 if(forkMetric_stats.length > 0){
-                    //const phaseIds = [... new Set(forkMetric_stats.map(v=>v.name))]
                     const totals = forkMetric_stats.map(v=>v.total)
                     const chartStatTable = phaseTimetable(
                         totals,
                         statAccessors
                     )
-
                     let colorIndex = -1;
                     const areas = []
                     const rightLines = []

@@ -77,8 +77,9 @@ export const getForkMetricMap = (sorter = (a,b)=>a.start-b.start, reducer=(rtrn,
     return rtrn;
 }
 /*
-    get all the stats that match the filter key = value 
+    get all the stats that match the filter key = value     
 */
+//this is always returning a new array, that breaks memoization
 export const getStats = (filter={}) => (state)=>{
     if( state && state.data && state.data.stats){
         return state.data.stats.filter(v=>{

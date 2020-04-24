@@ -21,10 +21,14 @@ import {
 import Popover from '@material-ui/core/Popover';
 import { NavLink } from 'react-router-dom';
 
+import { Helmet } from "react-helmet";
+
 import { useSelector } from 'react-redux'
-import { getAllNames, getAllFailures } from '../redux/selectors';
+import { getInfo, getAllNames, getAllFailures } from '../redux/selectors';
 
 import theme from '../theme';
+
+
 
 
 export default ({ logoProps = {} }) => {
@@ -32,6 +36,7 @@ export default ({ logoProps = {} }) => {
     // const [search, setSearch] = useState("")
     const linkEl = useRef(null);
 
+    const info = useSelector(getInfo)
     const phases = useSelector(getAllNames)
     const failures = useSelector(getAllFailures)
 
@@ -107,7 +112,7 @@ export default ({ logoProps = {} }) => {
                 </Nav>
             )}
         >
-
+        <Helmet><title>{info.id || "HF:report"}</title></Helmet>
         </PageHeader>
     )
 }

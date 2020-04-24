@@ -12,12 +12,12 @@ npm build
 There are 3 supported use cases
 1. Shell script
 build/report.sh accepts a json input and generates a standalone html document with the json and javascript embedded inside. 
+It works from either a file path argument or piped input to support path selection from a later json document.
 The report can be opened in a browser without internet access or a local webserver.
 ```
-cat all.json | ./build/report.sh
 ./build/report.sh /tmp/all.json
+cat bigFile.json | jq '$.hyperfoil' | ./build/report.sh
 ```
-
 2. Hosted html with embedded javascript
 The report.sh script creates a standalone html page with embedded json and javascript but the template html page can also load json
 via the data query parameter. Copy the build/index.embedded.html as index.html into the webserver folder with any json files and open 

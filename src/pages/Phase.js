@@ -164,7 +164,7 @@ export default () => {
                 <Card style={{ pageBreakInside: 'avoid' }}>
                      <CardHeader>
                          <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-                             <ToolbarGroup><ToolbarItem>{`${stat.metric} percentile histogram`}</ToolbarItem></ToolbarGroup>
+                             <ToolbarGroup><ToolbarItem>{`${stat.metric} percentile distribution`}</ToolbarItem></ToolbarGroup>
                          </Toolbar>
                      </CardHeader>
                      <CardBody style={{ minHeight: 410 }}>

@@ -28,6 +28,8 @@ import Failures from './pages/Failures';
 
 import store, {history} from './redux/store';
 
+
+
 const logoProps = {
     href: '/',
     onClick: (e) => {
@@ -42,9 +44,9 @@ ReactDOM.render(
     <Provider store={store}>
         <ConnectedRouter history={history}>
             <Page header={(<Header logoProps={logoProps} />)}>
-                <Helmet>
+                {/* <Helmet>
                     <title>HF:report</title>
-                </Helmet>
+                </Helmet> */}
             <CacheSwitch>
                 <CacheRoute exact path="/" component={Summary} />
                 <CacheRoute exact path="/details" component={Details} />
