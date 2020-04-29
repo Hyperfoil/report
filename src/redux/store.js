@@ -50,11 +50,16 @@ if(window && window.__DATA__){
     loaded(data);
 }
 const q = qs.parse(window.location.search)
-if(q.data){
-    fetchival(q.data,{
-        responseAs:'json'
-    }).get().then(response=>{
-        
+var config = {
+    responseAs:'json'
+}
+if (q.token && q.token != "") {
+    config.headers = {
+        Authorization: "Bearer " + q.token
+    }
+}
+if (q.data){
+    fetchival(q.data, config).get().then(response=>{
         loaded(response)
     },error=>{
 
