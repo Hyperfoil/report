@@ -10,7 +10,6 @@ import {
     ToolbarGroup,
     ToolbarItem,
     CardBody,
-    PageSection,
     Title
 } from '@patternfly/react-core';
 import {
@@ -102,7 +101,7 @@ export default () => {
         ]
 
         segments.push(
-            <PageSection key={stat.metric}>
+            <React.Fragment key={stat.metric}>
                 <Title headingLevel="h1" size="4xl">{stat.name}</Title>
                 <Card style={{ pagreBreakInside: 'avoid' }}>
                      <CardHeader>
@@ -200,7 +199,7 @@ export default () => {
                         }}</AutoSizer>
                      </CardBody>
                 </Card>
-            </PageSection>
+            </React.Fragment>
         )
     })
     return (

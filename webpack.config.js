@@ -15,10 +15,7 @@ const TOKEN = "window.__DATA__ = [/**DATAKEY**/];"
 
 class BashHook {
   apply(compiler){
-    console.log("new DoneHook()")
     compiler.hooks.done.tap('DoneHook',(stats)=>{
-
-      console.log("MYCALLBACK")
 
       const html = fs.readFileSync(path.resolve(__dirname,"build/index.embedded.html")).toString();
       const index = html.indexOf(TOKEN)

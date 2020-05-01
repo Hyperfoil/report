@@ -6,7 +6,6 @@ import {
     Card,
     CardHeader,
     CardBody,
-    PageSection,
     Toolbar,
     ToolbarGroup,
     ToolbarItem,
@@ -235,7 +234,7 @@ export default () => {
                         value: 'Requests/s'                        
                     })
                     rtrn.push(
-                        <PageSection key={`${forkName}.${metricName}`}>
+                        <React.Fragment key={`${forkName}.${metricName}`}>
                             <Card style={{ pageBreakInside: 'avoid'}}>
                                 <CardHeader>
                                     <Toolbar className="">
@@ -335,7 +334,7 @@ export default () => {
                                     }}</AutoSizer>
                                 </CardBody>
                             </Card>
-                        </PageSection>
+                        </React.Fragment>
                     )
                 }
 

@@ -64,6 +64,7 @@ export default ({ logoProps = {} }) => {
                         <NavItem itemId={0} isActive={false}>
                             <NavLink exact={true} to="/" activeClassName="pf-m-current">
                                 Summary
+                                <Helmet><title>{info.id || "HF:report"}</title></Helmet>{/*Moved here because PageHeader does not render children*/}
                             </NavLink>
                         </NavItem>
                         <NavItem itemId={0} isActive={false}>
@@ -112,7 +113,6 @@ export default ({ logoProps = {} }) => {
                 </Nav>
             )}
         >
-        <Helmet><title>{info.id || "HF:report"}</title></Helmet>
         </PageHeader>
     )
 }

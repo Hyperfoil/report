@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import {createBrowserHistory, createHashHistory} from 'history'
+import { createBrowserHistory, createHashHistory } from 'history'
 import { createStore, combineReducers, compose, applyMiddleware } from 'redux';
-import {connectRouter} from 'connected-react-router'
+import { connectRouter } from 'connected-react-router'
 import thunk from 'redux-thunk';
 import * as qs from 'query-string';
 
@@ -10,13 +10,27 @@ import fetchival from 'fetchival';
 export const history = createHashHistory();//createBrowserHistory();//
 
 const LOADED = "data/loaded";
+const ERROR = "alert/error";
+const CLEAR = "alert/clear";
 
-const dataReducer = (state = {}, action) =>{
-    switch(action.type){
-        case LOADED:{
+const dataReducer = (state = false, action) => {
+    switch (action.type) {
+        case LOADED: {
             state = action.data;
         }
-        break;
+            break;
+    }
+    return state;
+}
+const alertReducer = (state = [], action) => {
+    switch (action.type) {
+        case ERROR: {
+            const { title, variant, message } = action;
+            state = [...state, { title, variant, message }]
+        } break;
+        case CLEAR: {
+            state = []
+        } break;
     }
     return state;
 }
@@ -24,6 +38,7 @@ const dataReducer = (state = {}, action) =>{
 const appReducers = combineReducers({
     router: connectRouter(history),
     data: dataReducer,
+    alert: alertReducer,
 })
 const enhancer = compose(
     applyMiddleware(
@@ -31,10 +46,16 @@ const enhancer = compose(
     ),
 )
 
-export const loaded = (data)=>{
+export const loaded = (data) => {
     store.dispatch({
-        type:LOADED,
+        type: LOADED,
         data
+    })
+}
+export const alert = ({ title, variant, message }) => {
+    store.dispatch({
+        type: ERROR,
+        title, variant, message
     })
 }
 
@@ -42,29 +63,34 @@ const store = createStore(
     appReducers,
     enhancer
 )
+const q = qs.parse(window.location.search)
 
-if(window && window.__DATA__){
-    const data = window.__DATA__ || {info:{},stats:[],sessions:[],agents:[]};
-    console.log("embedded",data)
+if (window && window.__DATA__ && Object.keys(window.__DATA__).length > 0) {
+    const data = window.__DATA__ || { info: {}, stats: [], sessions: [], agents: [] };
     delete window.__DATA__;
     loaded(data);
-}
-const q = qs.parse(window.location.search)
-var config = {
-    responseAs:'json'
-}
-if (q.token && q.token != "") {
-    config.headers = {
-        Authorization: "Bearer " + q.token
+} else if (q.data) {
+    var config = {
+        responseAs: 'json'
     }
-}
-if (q.data){
-    fetchival(q.data, config).get().then(response=>{
+    if (q.token && q.token != "") {
+        config.headers = {
+            Authorization: "Bearer " + q.token
+        }
+    }
+    fetchival(q.data, config).get().then(response => {
         loaded(response)
-    },error=>{
+    }, error => {
+        alert({
+            title: "Failed to load data",
+            message: `could not load data from <a target="_blank" rel="noopener noreferrer" href="${q.data}">${q.data}</a>`
+        })
+    })
 
+} else {
+    alert({
+        title: "Failed to load data",
+        message: "missing <code>?data</code> query parameter"
     })
 }
-
 export default store;
-

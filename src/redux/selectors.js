@@ -121,7 +121,8 @@ export const getDomain = (stats)=>{
     return rtrn;
 }
 export const getInfo = (state)=>state && state.data && state.data.info ? state.data.info : {}
-export const getData = (state)=>state.data || {stats:[]}
+export const getData = (state)=>state.data
+export const getAlerts = (state)=>state.alert
 export const getAllTotals = createSelector(
     getStats(),
     (stats)=>[... new Set(stats.map(v=>v.total))]

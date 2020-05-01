@@ -18,8 +18,8 @@ import {
 
 import './index.css';
 
-import Header from './components/Header';
 
+import Layout from './components/Layout';
 
 import Summary from './pages/Summary';
 import Details from './pages/Details';
@@ -30,20 +30,13 @@ import store, {history} from './redux/store';
 
 
 
-const logoProps = {
-    href: '/',
-    onClick: (e) => {
-      history.push('/')
-      e.preventDefault()
-    },
-    //target: '_blank'
-  };
+
 
   //
 ReactDOM.render(
     <Provider store={store}>
         <ConnectedRouter history={history}>
-            <Page header={(<Header logoProps={logoProps} />)}>
+            <Layout>
                 {/* <Helmet>
                     <title>HF:report</title>
                 </Helmet> */}
@@ -57,7 +50,7 @@ ReactDOM.render(
                 } />
                 <Route path="/failures" component={Failures} />
             </CacheSwitch>
-            </Page>
+            </Layout>
         </ConnectedRouter>
     </Provider>
 , document.getElementById('root'));

@@ -7,6 +7,7 @@ import {
     CardHeader,
     CardBody,
     PageSection,
+    Spinner,
     Toolbar,
     ToolbarGroup,
     ToolbarItem,
@@ -27,6 +28,7 @@ import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
 
 import {
+    getAlerts,
     getInfo,
     getStats,
     getForkMetricMap, 
@@ -98,6 +100,7 @@ const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
 
 export default () => {
+    const alerts = useSelector(getAlerts);
     const stats = useSelector(getStats());
     const failures = useSelector(getAllFailures)
     const info = useSelector(getInfo)
@@ -135,11 +138,11 @@ export default () => {
     ]
 
     const sections = useMemo(()=>{
-        console.log("creating Summary sections")
+        const rtrn = []
         if(currentDomain[0] !== fullDomain[0] || currentDomain[1] !== fullDomain[1]){
             setDomain(fullDomain)
         }
-        const rtrn = []
+        
         forkNames.forEach(forkName=>{
             metricNames.forEach(metricName=>{
                 const forkMetric_stats = stats.filter(v=>v.fork === forkName && v.metric === metricName)
@@ -227,7 +230,6 @@ export default () => {
 
                     rtrn.push(
                         <React.Fragment key={`${forkName}.${metricName}`}>
-                            <PageSection>
                                 <Card style={{ pageBreakInside: 'avoid' }}>
                                     <CardHeader>
                                         <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
@@ -304,18 +306,16 @@ export default () => {
                                         )}</AutoSizer>
                                     </CardBody>
                                 </Card>
-                            </PageSection>
                         </React.Fragment>
                     )
                 }
             })
         })
         return rtrn;
-    },[stats,forkNames,metricNames,statAccessors,currentDomain,setDomain])
+    },[stats,forkNames,metricNames,statAccessors,currentDomain,setDomain,alerts])
 
     return (
         <React.Fragment>
-            <PageSection>
                 <Card>
                     <CardBody>
                         <div className="pf-c-content">
@@ -335,9 +335,9 @@ export default () => {
                         </div>
                     </CardBody>
                 </Card>
-            </PageSection>
+            
             {failures.length > 0 ? (
-                <PageSection>
+                <React.Fragment>
                     {failures.map((failure, failureIndex) => {
                         return (
                             <div key={`failure.${failureIndex}`} className="pf-c-alert pf-m-danger pf-m-inline" aria-label="Inline danger alert">
@@ -352,7 +352,7 @@ export default () => {
                             </div>
                         )
                     })}
-                </PageSection>
+                </React.Fragment>
             ) : null}
             {sections}
         </React.Fragment>
