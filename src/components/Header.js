@@ -67,7 +67,7 @@ export default ({ logoProps = {} }) => {
                                 <Helmet><title>{info.id || "HF:report"}</title></Helmet>{/*Moved here because PageHeader does not render children*/}
                             </NavLink>
                         </NavItem>
-                        <NavItem itemId={0} isActive={false}>
+                        <NavItem itemId={1} isActive={false}>
                             <NavLink exact={true} to="/details" activeClassName="pf-m-current">
                                 Details
                             </NavLink>
@@ -76,12 +76,17 @@ export default ({ logoProps = {} }) => {
                             <span ref={linkEl} style={{ cursor: "pointer" }}>Phases<CaretDownIcon /></span>
                         </NavItem>
                         {failures && !failures.length === 0 ?
-                            <NavItem itemId={0} isActive={false}>
+                            <NavItem itemId={3} isActive={false}>
                                 <NavLink exact={true} to="/failures" activeClassName="pf-m-current">
                                     Failures
                                 </NavLink>
                             </NavItem> : null
                         }
+                        <NavItem itemId={4} isActive={false}>
+                            <NavLink exact={true} to="/cpu" activeClassName="pf-m-current">
+                              CPU
+                            </NavLink>
+                        </NavItem>
                     </NavList>
                     <Popover id="phases" open={open} anchorEl={linkEl.current} onClose={(e) => { setOpen(false) }} anchorOrigin={{
                         vertical: 'bottom',

@@ -1,4 +1,3 @@
-import store from './store';
 import { createSelector } from 'reselect'
 
 export const DEFAULT_NAME = ":DEFAULT:";
@@ -76,13 +75,30 @@ export const getForkMetricMap = (sorter = (a,b)=>a.start-b.start, reducer=(rtrn,
     }
     return rtrn;
 }
+
+function hfdata(state) {
+   if (!state || !state.data) {
+      return undefined
+   }
+   if (state.data["$schema"] === "http://hyperfoil.io/run-schema/v2.0") {
+      return state.data;
+   }
+   for (var v of Object.values(state.data)) {
+      if (v["$schema"] === "http://hyperfoil.io/run-schema/v2.0") {
+         return v
+      }
+   }
+   return undefined
+}
+
 /*
     get all the stats that match the filter key = value     
 */
 //this is always returning a new array, that breaks memoization
 export const getStats = (filter={}) => (state)=>{
-    if( state && state.data && state.data.stats){
-        return state.data.stats.filter(v=>{
+    const data = hfdata(state)
+    if (data && data.stats){
+        return data.stats.filter(v=>{
             return Object.keys(filter).map(key=>v[key]==filter[key]).reduce((prev,current)=>prev && current, true)
         })
     }else{
@@ -94,9 +110,10 @@ export const getStats = (filter={}) => (state)=>{
     get start and end for the first and last entry in each stat series
 */
 export const getPhaseTransitionTs = (state)=>{
+    const data = hfdata(state)
     let rtrn = []
-    if(state && state.data && state.data.stats){
-        state.data.stats.forEach(stat=>{
+    if(data && data.stats){
+        data.stats.forEach(stat=>{
             rtrn.push(stat.series[0].startTime)
             rtrn.push(stat.series[stat.series.length-1].startTime)
             
@@ -120,9 +137,16 @@ export const getDomain = (stats)=>{
     })
     return rtrn;
 }
-export const getInfo = (state)=>state && state.data && state.data.info ? state.data.info : {}
-export const getData = (state)=>state.data
+
+export const getInfo = (state)=> {
+   const data = hfdata(state)
+   return data && data.info ? data.info : {}
+}
+
+export const getData = (state)=> hfdata(state)
+
 export const getAlerts = (state)=>state.alert
+
 export const getAllTotals = createSelector(
     getStats(),
     (stats)=>[... new Set(stats.map(v=>v.total))]
@@ -151,4 +175,11 @@ export const getAllMetricNames = createSelector(
 )
 
 //(state)=>[...new Set(state && state.data && state.data.stats ? state.data.stats.map(v=>v.metric) : [])];
-export const getAllFailures = state=> state && state.data && state.data.failures ? state.data.failures : []
+export const getAllFailures = state => {
+   const data = hfdata(state)
+   return data && data.failures ? data.failures : []
+}
+
+export const getCpu = state => {
+   return (state && state.data && state.data.cpu && state.data.cpu.data) || []
+}

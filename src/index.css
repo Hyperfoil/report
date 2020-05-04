@@ -29,3 +29,12 @@ code {
     width: 842pt
   }
 }
+
+#cpuToolTip th, #cpuToolTip td {
+   padding-left: 5px;
+   padding-right: 5px;
+}
+
+#cpuToolTip td {
+   text-align: right;
+}
