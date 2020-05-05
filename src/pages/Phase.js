@@ -47,11 +47,11 @@ export default () => {
 
     const segments = []
     stats.forEach(stat=>{
-        
+
         const responsetimeHisto = stat.histogram.linear.map((entry, index, all)=>{
             entry.value = Math.round(entry.to / 1000000);
             return entry;
-        }).filter(v => v !== undefined);
+        }).filter(v => v !== undefined).filter(v => v.percentile <= 0.95);
 
         stat.histogram.percentiles.sort((a,b)=>a.percentile-b.percentile)
         const percentileHisto = stat.histogram.percentiles.map((entry, index, all)=>{
@@ -138,21 +138,21 @@ export default () => {
                                             value="count"
                                             position="insideLeft"
                                             angle={-90}
-                                            offset={0} 
+                                            offset={0}
                                             textAnchor='middle'
                                             style={{ textAnchor: 'middle' }}
                                         />
                                     </YAxis>
-                                    <Bar 
-                                        name="count" 
-                                        yAxisId={0} 
-                                        dataKey='count' 
-                                        barSize={2} 
-                                        isAnimationActive={false} 
-                                        dot={false} 
-                                        fill="#002F5D" 
-                                        stroke={"#002F5D"} 
-                                        style={{ strokeWidth: 2 }} 
+                                    <Bar
+                                        name="count"
+                                        yAxisId={0}
+                                        dataKey='count'
+                                        barSize={2}
+                                        isAnimationActive={false}
+                                        dot={false}
+                                        fill="#002F5D"
+                                        stroke={"#002F5D"}
+                                        style={{ strokeWidth: 2 }}
                                     />
                                     <Tooltip content={<OverloadTooltip />} labelFormatter={responsetimeTickFormatter} />
                                 </ComposedChart>
@@ -185,14 +185,10 @@ export default () => {
                                     >
                                         <Label value="percentile" position="insideBottom" angle={0} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
                                     </XAxis>
-                                    <YAxis yAxisId={0} orientation="left" >
-                                        <Label value="value" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
+                                    <YAxis yAxisId={0} orientation="left"  >
+                                        <Label value="ms" position="insideLeft" angle={-90} />
                                     </YAxis>
-                                    <YAxis yAxisId={1} orientation="right"  >
-                                        <Label value="ms" position="insideRight" angle={-90} />
-                                    </YAxis>
-                                    <Line name="requests" yAxisId={0} dataKey='count' isAnimationActive={false} fill="#6EC664" stroke="#6EC664" style={{ strokeWidth: 0 }} />
-                                    <Line name="response time" yAxisId={1} dataKey='value' dot={false} isAnimationActive={false} stroke={'#002F5D'} style={{ strokeWidth: 2 }} />
+                                    <Line name="response time" yAxisId={0} dataKey='value' dot={false} isAnimationActive={false} stroke={'#002F5D'} style={{ strokeWidth: 2 }} />
                                     <Tooltip content={<OverloadTooltip extra={extra} />} labelFormatter={tickFormatter} />
                                 </ComposedChart>
                             )
