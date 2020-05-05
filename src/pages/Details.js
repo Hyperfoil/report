@@ -48,24 +48,35 @@ const colorNames = Object.keys(colors);
 
 const phasesTimetable = (data = [], stats = [], getStart = v => v.startTime, getEnd = v => v.endTime, getKey = v=>v._pif) => {
     let rtrn = {}
+    // In runs with multiple agents the wall-clock timestamps often don't match exactly; while merging the stats
+    // each interval is an union of the agents' intervals and therefore the per-second intervals overlap.
+    // That would mess up charts, producing a sawtooth-like pattern instead of bars, so we have to artificially correct it.
+    let ends = {}
     data.forEach(entry => {
-        const start = getStart(entry);
+        const key = getKey(entry)
+        let phaseEnds = ends[key]
+        if (!phaseEnds) {
+            ends[key] = phaseEnds = []
+        }
+        phaseEnds.push(getEnd(entry))
+    })
+    Object.values(ends).forEach(phaseEnds => phaseEnds.sort())
+    data.forEach(entry => {
+        const key = getKey(entry);//phaseName
+
+        let start = getStart(entry);
         const end = getEnd(entry);
+        const prevEndIndex = ends[key].filter(e => e < end).length - 1
+        if (prevEndIndex >= 0 && ends[key][prevEndIndex] >= start) {
+            start = ends[key][prevEndIndex] + 1
+        }
 
         const rtrnStart = rtrn[start] || { _areaKey: start }
         const rtrnEnd = rtrn[end] || { _areaKey: end }
 
-        const key = getKey(entry);//phaseName
-
-        stats.forEach((statName, statIndex) => {
-            let statKey, statValue
-            if (typeof statName === "string") {
-                statKey = key + "_" + statName;
-                statValue = entry[statName];
-            } else {
-                statKey = key + "_" + statName.name;
-                statValue = statName.accessor(entry)
-            }
+        stats.forEach(stat => {
+            const statKey = key + "_" + stat.name;
+            const statValue = stat.accessor(entry)
             rtrnStart[statKey] = statValue
             rtrnEnd[statKey] = statValue
         })
@@ -129,7 +140,9 @@ export default () => {
         { name: "90.0", accessor: v => v.percentileResponseTime['90.0'] },
         { name: "50.0", accessor: v => v.percentileResponseTime['50.0'] },
         { name: "Mean", accessor: v => v.meanResponseTime },
-        { name: "rps", accessor: v => v.requestCount / ((v.endTime - v.startTime) / 1000) },
+        // We don't divide the request count by duration since the union interval from different agents
+        // is often > 1000 ms while we know that on each agent the stats have been collected for only 1 second
+        { name: "rps", accessor: v => v.requestCount },
     ];
 
     const sections = useMemo(()=>{
@@ -165,7 +178,8 @@ export default () => {
                         // v=>v.startTime-v.startTime%1000 , 
                         // v=>v.endTime-v.endTime%1000,
                         // v=>v._pif
-                    ).filter(v =>
+                    )
+                    .filter(v =>
                         (v.start <= currentDomain[1] && v.start >= currentDomain[0]) ||
                         (v.end >= currentDomain[0] && v.end <= currentDomain[1])
                     )
