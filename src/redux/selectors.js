@@ -1,4 +1,5 @@
 import { createSelector } from 'reselect'
+import { DATA_SCHEMA } from './store'
 
 export const DEFAULT_NAME = ":DEFAULT:";
 
@@ -80,15 +81,10 @@ function hfdata(state) {
    if (!state || !state.data) {
       return undefined
    }
-   if (state.data["$schema"] === "http://hyperfoil.io/run-schema/v2.0") {
+   if (state.data["$schema"] === DATA_SCHEMA) {
       return state.data;
    }
-   for (var v of Object.values(state.data)) {
-      if (v["$schema"] === "http://hyperfoil.io/run-schema/v2.0") {
-         return v
-      }
-   }
-   return undefined
+   return Object.values(state.data).find(v => v["$schema"] === DATA_SCHEMA)
 }
 
 /*

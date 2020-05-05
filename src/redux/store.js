@@ -9,6 +9,8 @@ import fetchival from 'fetchival';
 
 export const history = createHashHistory();//createBrowserHistory();//
 
+export const DATA_SCHEMA = "http://hyperfoil.io/run-schema/v2.0"
+
 const LOADED = "data/loaded";
 const ERROR = "alert/error";
 const CLEAR = "alert/clear";
@@ -47,10 +49,18 @@ const enhancer = compose(
 )
 
 export const loaded = (data) => {
-    store.dispatch({
-        type: LOADED,
-        data
-    })
+    if (data["$schema"] === DATA_SCHEMA || Object.values(data).some(v => v["$schema"] === DATA_SCHEMA)) {
+       store.dispatch({
+           type: LOADED,
+           data
+       })
+    } else {
+       alert({
+         title: "No Hyperfoil data in report.",
+         variant: "danger",
+         message: "Loaded report does not contain any data with schema <code>" + DATA_SCHEMA + "</code>"
+       })
+    }
 }
 export const alert = ({ title, variant, message }) => {
     store.dispatch({
