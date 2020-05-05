@@ -199,8 +199,8 @@ export default () => {
 
                         phaseIds.filter(phaseId=>phaseId.startsWith(phaseName)).forEach(phaseId =>{
                             statAccessors
-                                .map(v => typeof v === "string" ? v : v.name)
-                                .filter(v=>v!=="rps")
+                                .map(v => v.name)
+                                .filter(v => v !== "rps" && v !== "Mean")
                                 .forEach((statName,statIndex)=>{
                                 const color = pallet[statIndex % pallet.length]
                                 areas.push(
@@ -219,6 +219,21 @@ export default () => {
                                     />
                                 )
                             })
+                            rightLines.push(
+                                <Line
+                                    key={`${phaseId}_Mean`}
+                                    unit="ns"
+                                    yAxisId={0}
+                                    name={"Mean"}
+                                    dataKey={`${phaseId}_Mean`}
+                                    stroke={"#FF0000"}
+                                    fill={"#FF0000"}
+                                    connectNulls={true}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                    style={{ strokeWidth: 1 }}
+                                />
+                            )
                             rightLines.push(
                                 <Line
                                     key={`${phaseId}_rps`}

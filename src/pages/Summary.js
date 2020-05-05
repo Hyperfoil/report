@@ -126,9 +126,9 @@ export default () => {
         { name: "Mean", accessor: v => v.summary.meanResponseTime },
         { name: "rps", accessor: v => v.summary.requestCount / ((v.end - v.start) / 1000) },
     ]
-    const statAccessorLeftNames = statAccessors
+    const percentiles = statAccessors
         .map(v => typeof v === "string" ? v : v.name)
-        .filter(v=>v!=="rps")
+        .filter(v => v !=="rps" && v !== "Mean")
 
     const codeAccessors = [
         { name: "2xx", accessor: v => v.summary.status_2xx},
@@ -167,7 +167,7 @@ export default () => {
                         const pallet = colors[colorNames[colorIndex]];
                         const phaseStats = forkMetric_stats.filter(v=>v.phase === phaseName)
                         phaseStats.forEach(phase => {
-                            statAccessorLeftNames.forEach((statName,statIndex) => {
+                            percentiles.forEach((statName,statIndex) => {
                                 const color = pallet[statIndex % pallet.length]
                                 const key = `${phase.name}.${metricName}_${statName}`
                                 areas.push(
@@ -187,6 +187,21 @@ export default () => {
                                     />
                                 )
                             })
+                            rightLines.push(
+                                <Line
+                                    key={`${phase.name}.${metricName}_Mean`}
+                                    yAxisId={0}
+                                    unit="ns"
+                                    name="Mean"
+                                    dataKey={`${phase.name}.${metricName}_Mean`}
+                                    stroke={"#FF0000"}
+                                    fill={"#FF0000"}
+                                    connectNulls={true}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                    style={{ strokeWidth: 2 }}
+                                />
+                            )
                             rightLines.push(
                                 <Line
                                     key={`${phase.name}.${metricName}_rps`}
