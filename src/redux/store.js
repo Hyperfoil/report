@@ -87,6 +87,7 @@ if (window && window.__DATA__ && Object.keys(window.__DATA__).length > 0) {
         config.headers = {
             Authorization: "Bearer " + q.token
         }
+        window.history.replaceState(window.history.state, "", "?data=" + q.data)
     }
     fetchival(q.data, config).get().then(response => {
         loaded(response)
