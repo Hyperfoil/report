@@ -42,7 +42,7 @@ export default () => {
     const nodes = useMemo(() => Array.from(cpu
             .flatMap(d => d.cpuinfo.map(item => item.node))
             .reduce((set, node) => set.add(node), new Set()).values()), [cpu])
-    const lines = nodes.map((node, i) => <Line type="monotone" key={node} dataKey={node} stroke={colors[i % colors.length]}/>)
+    const lines = nodes.map((node, i) => <Line type="monotone" dot={false} key={node} dataKey={node} stroke={colors[i % colors.length]}/>)
     const tooltipContent = ({active, payload, label}) => {
           if (active) {
              const tsData = cpu.filter(d => d.timestamp === label)
