@@ -161,6 +161,11 @@ export default () => {
         forkNames.forEach(forkName=>{
             metricNames.forEach(metricName=>{
                 const forkMetric_stats = stats.filter(v=>v.fork == forkName && v.metric == metricName)
+
+                const maxResponseTimes = forkMetric_stats.map(v => v.total.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
+                // We need to use functional range to reduce the domain below dataMax
+                const responseTimeDomain = [0, dataMax => maxResponseTimes[Math.floor(maxResponseTimes.length * 0.8)] * 2]
+
                 const phaseNames = [...new Set(forkMetric_stats.map(v=>v.phase))]
                 phaseNames.sort()
                 const series = forkMetric_stats.flatMap(v=>v.series.map(entry=>{
@@ -332,7 +337,7 @@ export default () => {
                                                     //domain={domain}
                                                     domain={currentDomain}
                                                 />
-                                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={['auto', 'auto']}>
+                                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={responseTimeDomain}>
                                                     <Label value="response time" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
                                                     {/* <Label value="response time" position="top" angle={0} offset={0} textAnchor='start' style={{ textAnchor: 'start' }} /> */}
                                                 </YAxis>

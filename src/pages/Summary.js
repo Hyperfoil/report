@@ -151,6 +151,9 @@ export default () => {
                 
                 if(forkMetric_stats.length > 0){
                     const totals = forkMetric_stats.map(v=>v.total)
+                    const maxResponseTimes = totals.map(v => v.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
+                    // We need to use functional range to reduce the domain below dataMax
+                    const responseTimeDomain = [0, dataMax => maxResponseTimes[Math.floor(maxResponseTimes.length * 0.8)] * 2]
                     const chartStatTable = phaseTimetable(
                         totals,
                         statAccessors
@@ -292,11 +295,11 @@ export default () => {
                                                     //domain={domain}
                                                     domain={currentDomain}
                                                 />
-                                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} >
+                                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={ responseTimeDomain }>
                                                     <Label value="response time" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
                                                     {/* <Label value="response time" position="top" angle={0} offset={0} textAnchor='start' style={{ textAnchor: 'start' }} /> */}
                                                 </YAxis>
-                                                <YAxis yAxisId={1} orientation="right" style={{ fill: '#A30000' }}>
+                                                <YAxis yAxisId={1} orientation="right" style={{ fill: '#A30000' }} >
                                                     <Label value={"Requests/s"} position="insideRight" angle={-90} style={{ fill: '#A30000' }} />
                                                     {/* <Label value="requests" position="top" angle={0} textAnchor='end' style={{ textAnchor: 'end' }} /> */}
                                                 </YAxis>
