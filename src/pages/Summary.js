@@ -56,31 +56,19 @@ const phaseTimetable = (data = [], stats = [], getStart = v => v.start, getEnd =
         const end = getEnd(entry);
         const mid = (end / 2 + start / 2)
 
-        const rtrnStart = rtrn[start] || { _areaKey: start }
-        const rtrnEnd = rtrn[end] || { _areaKey: end }
-        const rtrnMid = rtrn[mid] || { _areaKey: mid }
+        const rtrnStart = rtrn[start] || { _areaKey: start, start, end }
+        const rtrnEnd = rtrn[end] || { _areaKey: end, start, end }
+        const rtrnMid = rtrn[mid] || { _areaKey: mid, start, end }
 
         const key = getKey(entry);
 
         stats.forEach((statName, statIndex) => {
-            let statKey, statValue
-            if (typeof statName === "string") {
-                statKey = key + "_" + statName;
-                statValue = entry[statName];
-            } else {
-                statKey = key + "_" + statName.name;
-                statValue = statName.accessor(entry)
-            }
+            let statKey = key + "_" + statName.name;
+            let statValue = statName.accessor(entry)
             rtrnStart[statKey] = statValue
             rtrnEnd[statKey] = statValue
             rtrnMid[statKey] = statValue
         })
-        rtrnStart.start = start
-        rtrnStart.end = end
-        rtrnEnd.start = start
-        rtrnEnd.end = end
-        rtrnMid.start = start
-        rtrnMid.end = end
 
         rtrn[start] = rtrnStart;
         rtrn[end] = rtrnEnd;
@@ -124,11 +112,10 @@ export default () => {
         { name: "90.0", accessor: v => v.summary.percentileResponseTime['90.0'] },
         { name: "50.0", accessor: v => v.summary.percentileResponseTime['50.0'] },
         { name: "Mean", accessor: v => v.summary.meanResponseTime },
+        { name: "eps", accessor: v => (v.summary.status_5xx + v.summary.status_4xx + v.summary.status_other + v.summary.resetCount + v.summary.timeouts) / ((v.end - v.start) / 1000) },
         { name: "rps", accessor: v => v.summary.requestCount / ((v.end - v.start) / 1000) },
     ]
-    const percentiles = statAccessors
-        .map(v => typeof v === "string" ? v : v.name)
-        .filter(v => v !=="rps" && v !== "Mean")
+    const percentiles = [ "99.9", "99.0", "90.0", "50.0" ]
 
     const codeAccessors = [
         { name: "2xx", accessor: v => v.summary.status_2xx},
@@ -211,6 +198,20 @@ export default () => {
                                     yAxisId={1}
                                     name="Requests/s"
                                     dataKey={`${phase.name}.${metricName}_rps`}
+                                    stroke={"#00A300"}
+                                    fill={"#00A300"}
+                                    connectNulls={true}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                    style={{ strokeWidth: 2 }}
+                                />
+                            )
+                            rightLines.push(
+                                <Line
+                                    key={`${phase.name}.${metricName}_eps`}
+                                    yAxisId={1}
+                                    name="Errors/s"
+                                    dataKey={`${phase.name}.${metricName}_eps`}
                                     stroke={"#A30000"}
                                     fill={"#A30000"}
                                     connectNulls={true}
@@ -228,10 +229,22 @@ export default () => {
                         })
                     })
                     legendPayload.push({
+                        color: '#FF0000',
+                        fill: '#FF0000',
+                        type: 'rect',
+                        value: "Mean"
+                    })
+                    legendPayload.push({
+                        color: '#00A300',
+                        fill: '#00A300',
+                        type: 'rect',
+                        value: "Requests/s"
+                    })
+                    legendPayload.push({
                         color: '#A30000',
                         fill: '#A30000',
                         type: 'rect',
-                        value: "Requests/s"
+                        value: "Errors/s"
                     })
 
                     const tooltipExtra = [
@@ -299,8 +312,8 @@ export default () => {
                                                     <Label value="response time" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
                                                     {/* <Label value="response time" position="top" angle={0} offset={0} textAnchor='start' style={{ textAnchor: 'start' }} /> */}
                                                 </YAxis>
-                                                <YAxis yAxisId={1} orientation="right" style={{ fill: '#A30000' }} >
-                                                    <Label value={"Requests/s"} position="insideRight" angle={-90} style={{ fill: '#A30000' }} />
+                                                <YAxis yAxisId={1} orientation="right" style={{ fill: '#00A300' }} >
+                                                    <Label value={"Requests/s"} position="insideRight" angle={-90} style={{ fill: '#00A300' }} />
                                                     {/* <Label value="requests" position="top" angle={0} textAnchor='end' style={{ textAnchor: 'end' }} /> */}
                                                 </YAxis>
                                                 <Tooltip

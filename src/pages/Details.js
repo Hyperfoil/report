@@ -245,12 +245,26 @@ export default () => {
                                     yAxisId={1}
                                     name={"Requests/s"}
                                     dataKey={`${phaseId}_rps`}
-                                    stroke={"#A30000"}
-                                    fill={"#A30000"}
+                                    stroke={"#00A300"}
+                                    fill={"#00A300"}
                                     connectNulls={true}
                                     dot={false}
                                     isAnimationActive={false}
                                     style={{ strokeWidth: 1 }}
+                                />
+                            )
+                            rightLines.push(
+                                <Line
+                                     key={`${phaseId}_eps`}
+                                     yAxisId={1}
+                                     name={"Errors/s"}
+                                     dataKey={`${phaseId}_eps`}
+                                     stroke={"#A30000"}
+                                     fill={"#A30000"}
+                                     connectNulls={true}
+                                     dot={false}
+                                     isAnimationActive={false}
+                                     style={{ strokeWidth: 1 }}
                                 />
                             )
                         })
@@ -262,10 +276,22 @@ export default () => {
                         })
                     })
                     legendPayload.push({
+                        color: '#FF0000',
+                        fill: '#FF0000',
+                        type: 'rect',
+                        value: "Mean"
+                    })
+                    legendPayload.push({
+                        color: '#00A300',
+                        fill: '#00A300',
+                        type: 'rect',
+                        value: "Requests/s"
+                    })
+                    legendPayload.push({
                         color: '#A30000',
                         fill: '#A30000',
                         type: 'rect',
-                        value: 'Requests/s'                        
+                        value: "Errors/s"
                     })
                     rtrn.push(
                         <React.Fragment key={`${forkName}.${metricName}`}>
