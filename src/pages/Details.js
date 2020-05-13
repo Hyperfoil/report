@@ -364,12 +364,10 @@ export default () => {
                                                     domain={currentDomain}
                                                 />
                                                 <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={responseTimeDomain}>
-                                                    <Label value="response time" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
-                                                    {/* <Label value="response time" position="top" angle={0} offset={0} textAnchor='start' style={{ textAnchor: 'start' }} /> */}
+                                                    <Label value="response time" position="insideLeft" angle={-90} style={{ textAnchor: 'middle' }}/>
                                                 </YAxis>
-                                                <YAxis yAxisId={1} orientation="right" style={{ fill: '#A30000' }}>
-                                                    <Label value={"Requests/s"} position="insideRight" angle={-90} style={{ fill: '#A30000' }} />
-                                                    {/* <Label value="requests" position="top" angle={0} textAnchor='end' style={{ textAnchor: 'end' }} /> */}
+                                                <YAxis yAxisId={1} orientation="right">
+                                                    <Label value="requests/s" position="insideRight" angle={-90} style={{ textAnchor: 'middle' }} />
                                                 </YAxis>
                                                 <Tooltip
                                                     content={
