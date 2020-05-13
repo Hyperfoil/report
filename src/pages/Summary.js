@@ -6,6 +6,7 @@ import {
     Card,
     CardHeader,
     CardBody,
+    Expandable,
     PageSection,
     Spinner,
     Toolbar,
@@ -24,6 +25,10 @@ import {
     Tooltip,
     ReferenceArea,
 } from 'recharts';
+import {
+    ExclamationCircleIcon,
+} from '@patternfly/react-icons';
+
 import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
 
@@ -359,7 +364,13 @@ export default () => {
                                 {info.errors && info.errors.length > 0 ? (
                                     <React.Fragment>
                                         <dt>errors</dt>
+                                        <Expandable toggleTextCollapsed={ (<>
+                                                <ExclamationCircleIcon fill={theme.colors.alert.danger[100]} />
+                                                <span style={{ color: theme.colors.alert.danger[100] }}> {info.errors.length + " errors"}</span>
+                                             </>)}
+                                             toggleTextExpanded="Hide">
                                         {info.errors.map((error,idx)=>(<dd key={idx}>{error.agent} {error.msg}</dd>))}
+                                        </Expandable>
                                     </React.Fragment>
                                 ) : null}
                             </dl>
