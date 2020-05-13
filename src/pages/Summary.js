@@ -359,8 +359,8 @@ export default () => {
                                 <dt>benchmark</dt><dd>{info.benchmark}</dd>
                                 {info.description ? (<React.Fragment><dt>description</dt><dd>{info.description}</dd></React.Fragment>) : null}
                                 <dt>id</dt><dd>{info.id}</dd>
-                                <dt>start</dt><dd>{tsToHHmmss(info.startTime)}</dd>
-                                <dt>end</dt><dd>{tsToHHmmss(info.terminateTime)}</dd>
+                                <dt>start</dt><dd>{DateTime.fromMillis(info.startTime).toFormat("yyyy-LL-dd HH:mm:ss")}</dd>
+                                <dt>end</dt><dd>{DateTime.fromMillis(info.terminateTime).toFormat("yyyy-LL-dd HH:mm:ss")}</dd>
                                 {info.errors && info.errors.length > 0 ? (
                                     <React.Fragment>
                                         <dt>errors</dt>
