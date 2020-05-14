@@ -47,6 +47,10 @@ import {
 import OverloadTooltip from '../components/OverloadTooltip'
 import StatsTable from '../components/StatsTable'
 import theme from '../theme';
+import {
+   statAccessors,
+   percentiles,
+} from './accessors'
 
 const domainSelector = createSelector(
     getStats(),
@@ -70,7 +74,7 @@ const phaseTimetable = (data = [], stats = [], getStart = v => v.start, getEnd =
 
         stats.forEach((statName, statIndex) => {
             let statKey = key + "_" + statName.name;
-            let statValue = statName.accessor(entry)
+            let statValue = statName.accessor(entry.summary)
             rtrnStart[statKey] = statValue
             rtrnEnd[statKey] = statValue
             rtrnMid[statKey] = statValue
@@ -108,27 +112,8 @@ export default () => {
     const fullDomain = useSelector(domainSelector);
     const [currentDomain, setDomain] = useState(fullDomain);
 
-
     const nanoToMs = (v) => Number(v / 1000000.0).toFixed(0) + "ms"
     const tsToHHmmss = (v) => v ? DateTime.fromMillis(v).toFormat("HH:mm:ss") : ""
-
-    const statAccessors = [
-        { name: "99.9", accessor: v => v.summary.percentileResponseTime['99.9'] },
-        { name: "99.0", accessor: v => v.summary.percentileResponseTime['99.0'] },
-        { name: "90.0", accessor: v => v.summary.percentileResponseTime['90.0'] },
-        { name: "50.0", accessor: v => v.summary.percentileResponseTime['50.0'] },
-        { name: "Mean", accessor: v => v.summary.meanResponseTime },
-        { name: "eps", accessor: v => (v.summary.status_5xx + v.summary.status_4xx + v.summary.status_other + v.summary.resetCount + v.summary.timeouts) / ((v.end - v.start) / 1000) },
-        { name: "rps", accessor: v => v.summary.requestCount / ((v.end - v.start) / 1000) },
-    ]
-    const percentiles = [ "99.9", "99.0", "90.0", "50.0" ]
-
-    const codeAccessors = [
-        { name: "2xx", accessor: v => v.summary.status_2xx},
-        { name: "3xx", accessor: v => v.summary.status_3xx},
-        { name: "4xx", accessor: v => v.summary.status_4xx},
-        { name: "5xx", accessor: v => v.summary.status_5xx}        
-    ]
 
     const sections = useMemo(()=>{
         const rtrn = []

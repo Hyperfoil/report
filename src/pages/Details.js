@@ -27,6 +27,10 @@ import { DateTime } from 'luxon';
 import { buildName } from '../redux/selectors';
 import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
+import {
+   percentileAccessors,
+   percentiles,
+} from './accessors'
 
 import {
     getData, 
@@ -40,8 +44,14 @@ import {
     getAllMetricNames,
 } from '../redux/selectors';
 
-
-const stats = ['99.99', '99.9', '99.0', '90.0', '50.0', 'Mean'];
+const statAccessors = [
+   ...percentileAccessors,
+   { name: "Mean", accessor: v => v.meanResponseTime },
+   // We don't divide the request count by duration since the union interval from different agents
+   // is often > 1000 ms while we know that on each agent the stats have been collected for only 1 second
+   { name: "rps", accessor: v => v.requestCount },
+   { name: "eps", accessor: v => v.status_5xx + v.status_4xx + v.status_other + v.resetCount + v.timeouts },
+]
 
 const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
@@ -133,18 +143,6 @@ export default () => {
 
     const zoom = useZoom();
 
-    const statAccessors = [
-        { name: "99.99", accessor: v => v.percentileResponseTime['99.99'] },
-        { name: "99.9", accessor: v => v.percentileResponseTime['99.9'] },
-        { name: "99.0", accessor: v => v.percentileResponseTime['99.0'] },
-        { name: "90.0", accessor: v => v.percentileResponseTime['90.0'] },
-        { name: "50.0", accessor: v => v.percentileResponseTime['50.0'] },
-        { name: "Mean", accessor: v => v.meanResponseTime },
-        // We don't divide the request count by duration since the union interval from different agents
-        // is often > 1000 ms while we know that on each agent the stats have been collected for only 1 second
-        { name: "rps", accessor: v => v.requestCount },
-    ];
-
     const sections = useMemo(()=>{
         if(currentDomain[0] !== fullDomain[0] || currentDomain[1] !== fullDomain[1]){
             setDomain(fullDomain)
@@ -203,10 +201,7 @@ export default () => {
                         const pallet = colors[colorNames[colorIndex]];
 
                         phaseIds.filter(phaseId=>phaseId.startsWith(phaseName)).forEach(phaseId =>{
-                            statAccessors
-                                .map(v => v.name)
-                                .filter(v => v !== "rps" && v !== "Mean")
-                                .forEach((statName,statIndex)=>{
+                            percentiles.forEach((statName,statIndex)=>{
                                 const color = pallet[statIndex % pallet.length]
                                 areas.push(
                                     <Area
