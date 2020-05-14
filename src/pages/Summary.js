@@ -45,6 +45,7 @@ import {
     getDomain,
 } from '../redux/selectors';
 import OverloadTooltip from '../components/OverloadTooltip'
+import StatsTable from '../components/StatsTable'
 import theme from '../theme';
 
 const domainSelector = createSelector(
@@ -348,6 +349,8 @@ export default () => {
         return rtrn;
     },[stats,forkNames,metricNames,statAccessors,currentDomain,setDomain,alerts])
 
+    const allTotals = useSelector(getAllTotals)
+
     return (
         <React.Fragment>
                 <Card>
@@ -375,7 +378,6 @@ export default () => {
                         </div>
                     </CardBody>
                 </Card>
-            
             {failures.length > 0 ? (
                 <React.Fragment>
                     {failures.map((failure, failureIndex) => {
@@ -395,6 +397,12 @@ export default () => {
                 </React.Fragment>
             ) : null}
             {sections}
+            <br />
+            <Card>
+                <CardBody>
+                  <StatsTable data={allTotals} />
+                </CardBody>
+            </Card>
         </React.Fragment>
     )
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useSelector } from 'react-redux'
 
 import { useHistory, useParams } from "react-router"
@@ -25,6 +25,7 @@ import {
 
 import { AutoSizer } from 'react-virtualized';
 
+import StatsTable from '../components/StatsTable'
 import OverloadTooltip from '../components/OverloadTooltip'
 
 import {
@@ -44,6 +45,7 @@ import {splitName} from '../redux/selectors';
 export default () => {
     let { phaseId } = useParams();
     const stats = useSelector(getStats({name:phaseId}));
+    const totals = useMemo(() => stats.map(v => v.total), [stats])
 
     const segments = []
     stats.forEach(stat=>{
@@ -198,7 +200,13 @@ export default () => {
             </React.Fragment>
         )
     })
-    return (
-        <React.Fragment>{segments}</React.Fragment>
-    )
+    return (<>
+               {segments}
+               <br />
+               <Card>
+                  <CardBody>
+                     <StatsTable data={totals} />
+                  </CardBody>
+               </Card>
+           </>)
 }
