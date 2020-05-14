@@ -200,7 +200,7 @@ export default () => {
                             rightLines.push(
                                 <Line
                                     key={`${phase.name}.${metricName}_eps`}
-                                    yAxisId={1}
+                                    yAxisId={2}
                                     name="Errors/s"
                                     dataKey={`${phase.name}.${metricName}_eps`}
                                     stroke={"#A30000"}
@@ -304,6 +304,9 @@ export default () => {
                                                 </YAxis>
                                                 <YAxis yAxisId={1} orientation="right" >
                                                     <Label value="requests/s" position="insideRight" angle={-90} style={{ textAnchor: 'middle' }} />
+                                                </YAxis>
+                                                <YAxis yAxisId={2} orientation="right">
+                                                    <Label value="errors/s" position="insideRight" angle={-90} style={{ textAnchor: 'middle' }} />
                                                 </YAxis>
                                                 <Tooltip
                                                     content={
