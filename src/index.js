@@ -26,6 +26,7 @@ import Details from './pages/Details';
 import Phase from './pages/Phase';
 import Failures from './pages/Failures';
 import Cpu from './pages/Cpu';
+import Comparison from './pages/Comparison'
 
 import store, {history} from './redux/store';
 
@@ -51,6 +52,7 @@ ReactDOM.render(
                 } />
                 <Route path="/failures" component={Failures} />
                 <Route path="/cpu" component={Cpu} />
+                <Route path="/comparison" component={Comparison} />
             </CacheSwitch>
             </Layout>
         </ConnectedRouter>

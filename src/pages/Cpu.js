@@ -48,7 +48,7 @@ export default () => {
              const tsData = cpu.filter(d => d.timestamp === label)
              const full = (tsData && tsData.length > 0 && tsData[0].cpuinfo) || []
              return (<div className="recharts-default-tooltip" style={{ background: "white", border: "1px solid black" }}>
-                        <table id="cpuToolTip">
+                        <table id="toolTip">
                            <thead>
                            <tr>
                               <th>Node</th>

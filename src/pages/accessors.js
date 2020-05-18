@@ -7,11 +7,13 @@ export const percentileAccessors = [
 
 export const percentiles = percentileAccessors.map(a => a.name)
 
+export const meanAccessor = { name: "Mean", accessor: v => v.meanResponseTime }
+export const rpsAccessor = { name: "rps", accessor: v => v.requestCount / ((v.endTime - v.startTime) / 1000) }
+export const epsAccessor = { name: "eps", accessor: v => (v.status_5xx + v.status_4xx + v.status_other + v.resetCount + v.timeouts) / ((v.endTime - v.startTime) / 1000) }
+
 export const statAccessors = [
    ...percentileAccessors,
-   { name: "Mean", accessor: v => v.meanResponseTime },
-   { name: "rps", accessor: v => v.requestCount / ((v.endTime - v.startTime) / 1000) },
-   { name: "eps", accessor: v => (v.status_5xx + v.status_4xx + v.status_other + v.resetCount + v.timeouts) / ((v.endTime - v.startTime) / 1000) },
+   meanAccessor, rpsAccessor, epsAccessor
 ]
 
 export const codeAccessors = [

@@ -4,23 +4,34 @@ import { createStore, combineReducers, compose, applyMiddleware } from 'redux';
 import { connectRouter } from 'connected-react-router'
 import thunk from 'redux-thunk';
 import * as qs from 'query-string';
-
+import { hfdata } from './selectors'
 import fetchival from 'fetchival';
 
 export const history = createHashHistory();//createBrowserHistory();//
 
-export const DATA_SCHEMA = "http://hyperfoil.io/run-schema/v2.0"
+const DATA_SCHEMA = "http://hyperfoil.io/run-schema/v2.0"
 
 const LOADED = "data/loaded";
+const SELECT_RUN = "data/select_run"
 const ERROR = "alert/error";
 const CLEAR = "alert/clear";
 
 const dataReducer = (state = false, action) => {
     switch (action.type) {
         case LOADED: {
-            state = action.data;
+            state = {
+               runs: action.data,
+               currentRun: action.data[0],
+            }
         }
-            break;
+        break;
+        case SELECT_RUN: {
+            state = {
+               runs: state.runs,
+               currentRun: state.runs.find(r => findHyperfoilData(r).info.id === action.runId)
+            }
+        }
+        break
     }
     return state;
 }
@@ -48,25 +59,47 @@ const enhancer = compose(
     ),
 )
 
-export const loaded = (data) => {
-    if (data["$schema"] === DATA_SCHEMA || Object.values(data).some(v => v["$schema"] === DATA_SCHEMA)) {
-       store.dispatch({
-           type: LOADED,
-           data
-       })
-    } else {
-       alert({
+export function findHyperfoilData(runData) {
+   if (!runData) {
+      return undefined
+   }
+   if (runData["$schema"] === DATA_SCHEMA) {
+      return runData;
+   }
+   return Object.values(runData).find(v => v["$schema"] === DATA_SCHEMA)
+}
+
+function checkRunData(data, url) {
+   if (findHyperfoilData(data)) {
+      return data
+   } else {
+      alert({
          title: "No Hyperfoil data in report.",
          variant: "danger",
-         message: "Loaded report does not contain any data with schema <code>" + DATA_SCHEMA + "</code>"
-       })
-    }
+         message: "Report loaded from " + url + " does not contain any data with schema <code>" + DATA_SCHEMA + "</code>"
+      })
+      return undefined
+   }
+}
+
+const loaded = (data, url) => {
+    store.dispatch({
+        type: LOADED,
+        data
+    })
 }
 export const alert = ({ title, variant, message }) => {
     store.dispatch({
         type: ERROR,
         title, variant, message
     })
+}
+
+export const selectRun = runId => {
+   store.dispatch({
+      type: SELECT_RUN,
+      runId,
+   })
 }
 
 const store = createStore(
@@ -76,9 +109,12 @@ const store = createStore(
 const q = qs.parse(window.location.search)
 
 if (window && window.__DATA__ && Object.keys(window.__DATA__).length > 0) {
-    const data = window.__DATA__ || { info: {}, stats: [], sessions: [], agents: [] };
+    let data = window.__DATA__ || { info: {}, stats: [], sessions: [], agents: [] };
     delete window.__DATA__;
-    loaded(data);
+    if (!Array.isArray(data)) {
+       data = [data]
+    }
+    loaded(data.map(run => checkRunData(run, "this document")).filter(run => !!run));
 } else if (q.data) {
     var config = {
         responseAs: 'json'
@@ -89,15 +125,15 @@ if (window && window.__DATA__ && Object.keys(window.__DATA__).length > 0) {
         }
         window.history.replaceState(window.history.state, "", "?data=" + q.data)
     }
-    fetchival(q.data, config).get().then(response => {
-        loaded(response)
-    }, error => {
+    const runs = Array.isArray(q.data) ? q.data : [q.data]
+    Promise.all(q.data.map(url => fetchival(url, config).get().catch(error => {
         alert({
             title: "Failed to load data",
             message: `could not load data from <a target="_blank" rel="noopener noreferrer" href="${q.data}">${q.data}</a>`
         })
+    }).then(run => checkRunData(run)))).then(response => {
+       loaded(response.filter(run => !!run))
     })
-
 } else {
     alert({
         title: "Failed to load data",

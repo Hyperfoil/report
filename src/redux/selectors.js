@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect'
-import { DATA_SCHEMA } from './store'
+import { findHyperfoilData } from './store'
 
 export const DEFAULT_NAME = ":DEFAULT:";
 
@@ -78,14 +78,24 @@ export const getForkMetricMap = (sorter = (a,b)=>a.start-b.start, reducer=(rtrn,
 }
 
 function hfdata(state) {
-   if (!state || !state.data) {
+   if (!state || !state.data || !state.data.currentRun) {
       return undefined
    }
-   if (state.data["$schema"] === DATA_SCHEMA) {
-      return state.data;
-   }
-   return Object.values(state.data).find(v => v["$schema"] === DATA_SCHEMA)
+   return findHyperfoilData(state.data.currentRun)
 }
+
+function hfalldata(state) {
+   if (!state || !state.data || !state.data.runs) {
+      return []
+   }
+   return state.data.runs.map(run => findHyperfoilData(run)).filter(run => !!run);
+}
+
+export const currentRunIdSelector = state => {
+   const runData = hfdata(state)
+   return runData && runData.info.id
+}
+export const allRunIdsSelector = state => hfalldata(state).map(run => run.info.id)
 
 /*
     get all the stats that match the filter key = value     
@@ -179,3 +189,9 @@ export const getAllFailures = state => {
 export const getCpu = state => {
    return (state && state.data && state.data.cpu && state.data.cpu.data) || []
 }
+
+export const allRunsTotalsSelector = state => {
+   const runs = hfalldata(state)
+   return runs.reduce((m, d) => { m[d.info.id] = d.stats.map(s => s.total); return m }, {})
+}
+

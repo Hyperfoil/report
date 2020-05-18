@@ -9,7 +9,6 @@ import {
     Toolbar,
     ToolbarGroup,
     ToolbarItem,
-
 } from '@patternfly/react-core';
 import {
     CaretDownIcon,
@@ -24,12 +23,37 @@ import { NavLink } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
 import { useSelector } from 'react-redux'
-import { getInfo, getAllNames, getAllFailures } from '../redux/selectors';
+import { getInfo, getAllNames, getAllFailures, currentRunIdSelector, allRunIdsSelector } from '../redux/selectors';
+import { selectRun } from '../redux/store'
 
 import theme from '../theme';
 
-
-
+const Menu = ({id, elementRef, isOpen, setOpen, items, childContent}) => (
+   <Popover id="phases" open={isOpen} anchorEl={elementRef.current} onClose={(e) => { setOpen(false) }} anchorOrigin={{
+         vertical: 'bottom',
+         horizontal: 'center',
+     }}
+         transformOrigin={{
+             vertical: 'top',
+             horizontal: 'center',
+         }}
+     >
+         <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+             <nav className="pf-c-nav">
+                 <ul className="pf-c-nav__simple-list" role="menu" onClick={e => setOpen(false)}>
+                     {items.map((item, itemIndex) => {
+                         return (
+                             <li role="none" key={itemIndex} className="pf-c-nav__item">
+                                 { childContent(item) }
+                             </li>
+                         )
+                     })
+                     }
+                 </ul>
+             </nav>
+         </div>
+   </Popover>
+)
 
 export default ({ logoProps = {} }) => {
     const [open, setOpen] = useState(false)
@@ -39,6 +63,11 @@ export default ({ logoProps = {} }) => {
     const info = useSelector(getInfo)
     const phases = useSelector(getAllNames)
     const failures = useSelector(getAllFailures)
+    const currentRunId = useSelector(currentRunIdSelector)
+    const allRunIds = useSelector(allRunIdsSelector)
+
+    const [runSelectExpanded, setRunSelectExpanded] = useState(false)
+    const runsEl = useRef(null)
 
     return (
         <PageHeader
@@ -58,7 +87,7 @@ export default ({ logoProps = {} }) => {
                  :
                 null
             }
-            topNav={(
+            topNav={(<>
                 <Nav aria-label="Nav">
                     <NavList variant={NavVariants.horizontal}>
                         <NavItem itemId={0} isActive={false}>
@@ -87,36 +116,31 @@ export default ({ logoProps = {} }) => {
                               CPU
                             </NavLink>
                         </NavItem>
+                        { allRunIds.length > 1 && <>
+                           <NavItem itemId={5} isActive={false} onClick={(e, itemId) => { setRunSelectExpanded(!runSelectExpanded) }}>
+                               <span ref={runsEl} style={{ cursor: "pointer" }}>Select run<CaretDownIcon /></span>
+                           </NavItem>
+                           <NavItem itemId={6} isActive={false}>
+                               <NavLink exact={true} to="/comparison" activeClassName="pf-m-current">
+                                 Comparison
+                               </NavLink>
+                           </NavItem>
+                        </>}
                     </NavList>
-                    <Popover id="phases" open={open} anchorEl={linkEl.current} onClose={(e) => { setOpen(false) }} anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'center',
-                    }}
-                        transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'center',
-                        }}
-                    >
-                        <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-                            <nav className="pf-c-nav">
-                                <ul className="pf-c-nav__simple-list" role="menu" onClick={e => setOpen(false)}>
-                                    {phases.map((phaseName, phaseIndex) => {
-                                        const safeName = phaseName;//.replace(/\//g, "_")
-                                        return (
-                                            <li role="none" key={phaseIndex} className="pf-c-nav__item">
-                                                <NavLink className="pf-c-nav__link" to={"/phase/" + safeName}>{safeName}</NavLink>
-                                            </li>
-                                        )
-
-                                    })
-                                    }
-                                </ul>
-                            </nav>
-                        </div>
-
-                    </Popover>
+                    <Menu id="phases"
+                          items={ phases }
+                          elementRef={linkEl}
+                          isOpen={open} setOpen={setOpen}
+                          childContent={ p => (<NavLink className="pf-c-nav__link" to={ "/phase/" + p }>{p}</NavLink>) }
+                    />
+                    <Menu id="runs"
+                          items={ allRunIds }
+                          elementRef={runsEl}
+                          isOpen={runSelectExpanded} setOpen={setRunSelectExpanded}
+                          childContent={ r => (<Button variant="link" onClick={ () => selectRun(r) }>{r}</Button>) }
+                    />
                 </Nav>
-            )}
+            </>)}
         >
         </PageHeader>
     )
