@@ -126,7 +126,7 @@ if (window && window.__DATA__ && Object.keys(window.__DATA__).length > 0) {
         window.history.replaceState(window.history.state, "", "?data=" + q.data)
     }
     const runs = Array.isArray(q.data) ? q.data : [q.data]
-    Promise.all(q.data.map(url => fetchival(url, config).get().catch(error => {
+    Promise.all(runs.map(url => fetchival(url, config).get().catch(error => {
         alert({
             title: "Failed to load data",
             message: `could not load data from <a target="_blank" rel="noopener noreferrer" href="${q.data}">${q.data}</a>`
