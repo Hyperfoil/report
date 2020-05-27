@@ -26,13 +26,13 @@ class BashHook {
       fs.writeFileSync(path.resolve(__dirname,"build/report.sh"),
 `#!/bin/bash
 #TODO create script :)
-cat > /tmp/index.html << 'EOF'
+cat << 'EOF'
 ${html.substring(0,index)}
 EOF
-cat >> /tmp/index.html << EOF
+cat << EOF
     window.__DATA__ = JSON.parse("\`cat \${1:-/dev/stdin} | sed 's/\\\"/\\\\\\"/g'\`")
 EOF
-cat >> /tmp/index.html << 'EOF'
+cat << 'EOF'
 ${html.substring(index+TOKEN.length)}
 EOF
 `
