@@ -6,7 +6,7 @@ Reports can easily grow to several MB.
 ## Building
 ```
 npm install
-npm build
+npm run build
 ```
 ## Usage
 There are 3 supported use cases
