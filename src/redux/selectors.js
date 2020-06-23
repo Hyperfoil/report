@@ -187,7 +187,7 @@ export const getAllFailures = state => {
 }
 
 export const getCpu = state => {
-   return (state && state.data && state.data.cpu && state.data.cpu.data) || []
+   return (state && state.data && state.data.currentRun && state.data.currentRun.cpu && state.data.currentRun.cpu.data) || []
 }
 
 export const allRunsTotalsSelector = state => {
