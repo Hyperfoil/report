@@ -190,7 +190,17 @@ export const getCpu = state => {
    return (state && state.data && state.data.currentRun && state.data.currentRun.cpu && state.data.currentRun.cpu.data) || []
 }
 
+export const getConnections = state => {
+    const data = hfdata(state)
+    return data && data.connections ? data.connections : {}
+ }
+
 export const allRunsTotalsSelector = state => {
    const runs = hfalldata(state)
    return runs.reduce((m, d) => { m[d.info.id] = d.stats.map(s => s.total); return m }, {})
+}
+
+export const getAgentNames = state => {
+   const data = hfdata(state)
+   return data && data.agents ? data.agents.map(a => a.name) : []
 }

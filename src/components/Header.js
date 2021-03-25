@@ -101,23 +101,28 @@ export default ({ logoProps = {} }) => {
                         <NavItem itemId={2} isActive={false} onClick={(e, itemId) => { setOpen(!open) }}>
                             <span ref={linkEl} style={{ cursor: "pointer" }}>Phases<CaretDownIcon /></span>
                         </NavItem>
+                        <NavItem itemId={3} isActive={false}>
+                            <NavLink exact={true} to="/connections" activeClassName="pf-m-current">
+                                Connections
+                            </NavLink>
+                        </NavItem>
                         {failures && failures.length !== 0 ?
-                            <NavItem itemId={3} isActive={false}>
+                            <NavItem itemId={4} isActive={false}>
                                 <NavLink exact={true} to="/failures" activeClassName="pf-m-current">
                                     Failures
                                 </NavLink>
                             </NavItem> : null
                         }
-                        <NavItem itemId={4} isActive={false}>
+                        <NavItem itemId={5} isActive={false}>
                             <NavLink exact={true} to="/cpu" activeClassName="pf-m-current">
                               CPU
                             </NavLink>
                         </NavItem>
                         { allRunIds.length > 1 && <>
-                           <NavItem itemId={5} isActive={false} onClick={(e, itemId) => { setRunSelectExpanded(!runSelectExpanded) }}>
+                           <NavItem itemId={6} isActive={false} onClick={(e, itemId) => { setRunSelectExpanded(!runSelectExpanded) }}>
                                <span ref={runsEl} style={{ cursor: "pointer" }}>Select run<CaretDownIcon /></span>
                            </NavItem>
-                           <NavItem itemId={6} isActive={false}>
+                           <NavItem itemId={7} isActive={false}>
                                <NavLink exact={true} to="/comparison" activeClassName="pf-m-current">
                                  Comparison
                                </NavLink>

@@ -38,3 +38,14 @@ code {
 #toolTip td {
    text-align: right;
 }
+
+.legend-icon {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 5px;
+  border-width: 2px;
+  border-style: solid;
+  vertical-align: middle;
+  margin-right: 4px;
+}

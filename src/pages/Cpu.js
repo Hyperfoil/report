@@ -105,12 +105,10 @@ export default () => {
                             scale="time"
                             dataKey="timestamp"
                             tickFormatter={tsToHHmmss}
-                            //domain={domain}
                             domain={currentDomain}
                         />
                         <YAxis yAxisId={0} orientation="left" tickFormatter={ v => v + "%" }>
                             <Label value="CPU usage" position="insideLeft" angle={-90} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
-                            {/* <Label value="response time" position="top" angle={0} offset={0} textAnchor='start' style={{ textAnchor: 'start' }} /> */}
                         </YAxis>
                         <Tooltip content={tooltipContent} formatter={(e) => Number(e).toFixed(1) + "%"} itemSorter={p => -p.value}/>
                         <Legend payload={legendPayload} align="left" />
