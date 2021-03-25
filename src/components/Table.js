@@ -12,7 +12,6 @@ function Table({ columns, data, initialSortBy = [], hidden = [], rowStyler }) {
     headerGroups,
     rows,
     prepareRow,
-    state,
   } = useTable(
     {
       columns,

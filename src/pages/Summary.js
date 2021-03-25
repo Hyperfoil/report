@@ -1,14 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux'
-import { useHistory, useParams } from "react-router"
+import { useHistory } from "react-router"
 import { createSelector } from 'reselect'
 import {
     Card,
     CardHeader,
     CardBody,
     Expandable,
-    PageSection,
-    Spinner,
     Toolbar,
     ToolbarGroup,
     ToolbarItem,
@@ -33,13 +31,10 @@ import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
 
 import {
-    getAlerts,
     getInfo,
     getStats,
-    getForkMetricMap, 
-    getAllTotals, 
-    getAllFailures, 
-    getAllPhaseNames,
+    getAllTotals,
+    getAllFailures,
     getAllForkNames,
     getAllMetricNames,
     getDomain,
@@ -98,7 +93,6 @@ const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
 
 export default () => {
-    const alerts = useSelector(getAlerts);
     const stats = useSelector(getStats());
     const failures = useSelector(getAllFailures)
     const info = useSelector(getInfo)
@@ -120,13 +114,13 @@ export default () => {
         if(currentDomain[0] !== fullDomain[0] || currentDomain[1] !== fullDomain[1]){
             setDomain(fullDomain)
         }
-        
+
         forkNames.forEach(forkName=>{
             metricNames.forEach(metricName=>{
                 const forkMetric_stats = stats.filter(v=>v.fork === forkName && v.metric === metricName)
-                const phaseNames = [... new Set(forkMetric_stats.map(v=>v.phase))]
+                const phaseNames = [ ...new Set(forkMetric_stats.map(v=>v.phase)) ]
                 phaseNames.sort();
-                
+
                 if(forkMetric_stats.length > 0){
                     const totals = forkMetric_stats.map(v=>v.total)
                     const maxResponseTimes = totals.map(v => v.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
@@ -335,7 +329,7 @@ export default () => {
             })
         })
         return rtrn;
-    },[stats,forkNames,metricNames,statAccessors,currentDomain,setDomain,alerts])
+    },[stats,forkNames,metricNames,currentDomain,setDomain,fullDomain,history,setLeft,setRight,zoom])
 
     const allTotals = useSelector(getAllTotals)
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux'
 import {
     Alert,
@@ -84,7 +84,7 @@ export default () => {
                      </div>)
           }
     }
-    if (cpu.length == 0) {
+    if (cpu.length === 0) {
         return (<Alert variant="warning" title="No CPU data">Report does not contain any CPU data.</Alert>)
     }
     return (

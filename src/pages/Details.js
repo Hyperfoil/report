@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux'
-import { useHistory, useParams } from "react-router"
 import { createSelector } from 'reselect'
 import {
     Card,
@@ -24,7 +23,6 @@ import {
 } from 'recharts';
 import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
-import { buildName } from '../redux/selectors';
 import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
 import {
@@ -33,13 +31,8 @@ import {
 } from './accessors'
 
 import {
-    getData, 
     getDomain,
     getStats,
-    getForkMetricMap, 
-    getAllTotals, 
-    getAllFailures, 
-    getAllPhaseNames,
     getAllForkNames,
     getAllMetricNames,
 } from '../redux/selectors';
@@ -108,7 +101,7 @@ const getPhaseTransitionTs = (data = [], getStart = (v) => v.startTime, getEnd =
         rtrn.push(getStart(entry.series[0]))
         rtrn.push(getStart(entry.series[entry.series.length - 1]))
         rtrn.push(getEnd(entry.series[0]))
-        rtrn.push(getEnd(entry.series[entry.series.length - 1]))        
+        rtrn.push(getEnd(entry.series[entry.series.length - 1]))
     })
     return [...new Set(rtrn)]
 }
@@ -147,18 +140,18 @@ export default () => {
         if(currentDomain[0] !== fullDomain[0] || currentDomain[1] !== fullDomain[1]){
             setDomain(fullDomain)
         }
-        
-        
+
+
         const rtrn = [];
 
         const phaseTransitionTs = getPhaseTransitionTs(stats
-                // , v=>v.startTime-v.startTime%1000 
+                // , v=>v.startTime-v.startTime%1000
                 // , v=>v.endTime-v.endTime%1000
             ).filter(v => v > currentDomain[0] && v < currentDomain[1]);
 
         forkNames.forEach(forkName=>{
             metricNames.forEach(metricName=>{
-                const forkMetric_stats = stats.filter(v=>v.fork == forkName && v.metric == metricName)
+                const forkMetric_stats = stats.filter(v=>v.fork === forkName && v.metric === metricName)
 
                 const maxResponseTimes = forkMetric_stats.map(v => v.total.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
                 // We need to use functional range to reduce the domain below dataMax
@@ -172,13 +165,13 @@ export default () => {
                 }))
                 if(series.length > 0){
                     const phaseIds = [...new Set(series.map(v=>v._pif))]
-                    
+
 
                     const timetable = phasesTimetable(
                         series,
                         statAccessors
                         // ,
-                        // v=>v.startTime-v.startTime%1000 , 
+                        // v=>v.startTime-v.startTime%1000 ,
                         // v=>v.endTime-v.endTime%1000,
                         // v=>v._pif
                     )
@@ -267,7 +260,7 @@ export default () => {
                             color: pallet[0],
                             fill: pallet[0],
                             type: 'rect',
-                            value: phaseName                            
+                            value: phaseName
                         })
                     })
                     legendPayload.push({
@@ -378,7 +371,7 @@ export default () => {
                                                     formatter={(e) => Number(e).toFixed(0)}
                                                 />
                                                 <Legend payload={legendPayload} align="left" />
-                                                
+
                                                 {areas}
                                                 {rightLines}
                                                 {zoom.left && zoom.right ?
@@ -394,12 +387,12 @@ export default () => {
                     )
                 }
 
-                
-                
+
+
             })
         })
         return rtrn;
-    },[stats,forkNames,metricNames,statAccessors,currentDomain,setDomain])
+    },[stats,forkNames,metricNames,currentDomain,setDomain,fullDomain,zoom])
 
     return (
         <React.Fragment>{sections}</React.Fragment>

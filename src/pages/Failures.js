@@ -1,23 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux'
 import {
-    Card,
-    CardHeader,
-    CardBody,
     PageSection,
-    Toolbar,
-    ToolbarGroup,
-    ToolbarItem,
 } from '@patternfly/react-core';
 import {
-    getData, 
-    getStats,
-    getForkMetricMap, 
-    getAllTotals, 
-    getAllFailures, 
-    getAllPhaseNames,
-    getAllForkNames,
-    getAllMetricNames,
+    getAllFailures,
 } from '../redux/selectors';
 
 export default () => {
@@ -25,7 +12,7 @@ export default () => {
     return (
         <React.Fragment>
             <PageSection>
-            {failures.length > 0 ? (                
+            {failures.length > 0 ? (
                     failures.map((failure, failureIndex) => {
                         return (
                             <div key={`failure.${failureIndex}`} className="pf-c-alert pf-m-danger pf-m-inline" aria-label="Inline danger alert">
@@ -39,7 +26,7 @@ export default () => {
                                 </div>
                             </div>
                         )
-                    })                
+                    })
             ) : "no failures"}
             </PageSection>
         </React.Fragment>

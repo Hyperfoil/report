@@ -16,12 +16,9 @@ import {
     XAxis,
     YAxis,
     Tooltip,
-    ReferenceArea,
-    Scatter,
 } from 'recharts';
 import { AutoSizer } from 'react-virtualized';
 
-import OverloadTooltip from '../components/OverloadTooltip'
 import {
    splitName,
    allRunsTotalsSelector,

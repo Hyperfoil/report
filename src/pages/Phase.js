@@ -1,7 +1,7 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux'
 
-import { useHistory, useParams } from "react-router"
+import { useParams } from "react-router"
 
 import {
     Card,
@@ -29,18 +29,8 @@ import StatsTable from '../components/StatsTable'
 import OverloadTooltip from '../components/OverloadTooltip'
 
 import {
-    getData, 
-    getDomain,
     getStats,
-    getForkMetricMap, 
-    getAllTotals, 
-    getAllFailures, 
-    getAllPhaseNames,
-    getAllForkNames,
-    getAllMetricNames,
 } from '../redux/selectors';
-
-import {splitName} from '../redux/selectors';
 
 export default () => {
     let { phaseId } = useParams();
@@ -77,19 +67,13 @@ export default () => {
 
             tickTransform[entry.inversed] = entry.percentile
             ranges[entry.count] = (idx>0 ? all[idx-1].count : 0)
-            
+
         })
         const tickFormatter = (v) => {
             if (typeof tickTransform[v] !== "undefined") {
                 v = tickTransform[v]
             }
             return Number(100 * v).toFixed(2)+"%"
-        }
-        const rangeTickFormatter = (v,f,g) => {
-            if( typeof ranges[v] !== "undefined"){
-                return Number(100 * ranges[v]).toFixed(2)+" - "+Number(100 * v).toFixed(2)
-            }
-            return Number(100 * v).toFixed(2)
         }
         const responsetimeTickFormatter = (v,f,g) => {
             // const entry = responsetimeHisto[v];

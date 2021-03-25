@@ -1,10 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { createBrowserHistory, createHashHistory } from 'history'
+import { createHashHistory } from 'history'
 import { createStore, combineReducers, compose, applyMiddleware } from 'redux';
 import { connectRouter } from 'connected-react-router'
 import thunk from 'redux-thunk';
 import * as qs from 'query-string';
-import { hfdata } from './selectors'
 import fetchival from 'fetchival';
 
 export const history = createHashHistory();//createBrowserHistory();//
@@ -119,7 +117,7 @@ if (window && window.__DATA__ && Object.keys(window.__DATA__).length > 0) {
     var config = {
         responseAs: 'json'
     }
-    if (q.token && q.token != "") {
+    if (q.token && q.token !== "") {
         config.headers = {
             Authorization: "Bearer " + q.token
         }

@@ -1,14 +1,12 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import {
-    Alert, AlertActionLink, AlertActionCloseButton,
+    Alert,
     Bullseye,
     Page,
     PageSection,
     Spinner
 } from '@patternfly/react-core';
 import { useSelector } from 'react-redux'
-
 
 import Header from './Header';
 

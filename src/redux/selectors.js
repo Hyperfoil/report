@@ -8,7 +8,7 @@ export const DEFAULT_NAME = ":DEFAULT:";
     output is {phase, fork, iteration}
 */
 export const splitName = name => {
-    const split = name.split(/[\/_]/);
+    const split = name.split(/[/_]/);
     const rtrn = {}
     if (split.length === 1) {
         rtrn.phase = split[0];
@@ -20,10 +20,10 @@ export const splitName = name => {
         if( /^[0-9]{3}$/.test(split[1]) ){
             rtrn.fork = DEFAULT_NAME
             rtrn.iteration = split[1];
-    
+
         }else{
             rtrn.iteration = DEFAULT_NAME
-            rtrn.fork = split[1];    
+            rtrn.fork = split[1];
         }
     } else if (split.length === 3) {
         rtrn.phase = split[0];
@@ -52,7 +52,7 @@ export const getForkMetricMap = (sorter = (a,b)=>a.start-b.start, reducer=(rtrn,
     if(state && state.data && state.data.stats){
         state.data.stats.forEach(stat=>{
             if(typeof rtrn[stat.fork] === "undefined"){
-                rtrn[stat.fork] = {}            
+                rtrn[stat.fork] = {}
             }
             if(typeof rtrn[stat.fork][stat.metric] === "undefined"){
                 rtrn[stat.fork][stat.metric] = {}
@@ -72,7 +72,7 @@ export const getForkMetricMap = (sorter = (a,b)=>a.start-b.start, reducer=(rtrn,
                     phaseArray.sort(sorter);
                 })
             })
-        })            
+        })
     }
     return rtrn;
 }
@@ -98,14 +98,14 @@ export const currentRunIdSelector = state => {
 export const allRunIdsSelector = state => hfalldata(state).map(run => run.info.id)
 
 /*
-    get all the stats that match the filter key = value     
+    get all the stats that match the filter key = value
 */
 //this is always returning a new array, that breaks memoization
 export const getStats = (filter={}) => (state)=>{
     const data = hfdata(state)
     if (data && data.stats){
         return data.stats.filter(v=>{
-            return Object.keys(filter).map(key=>v[key]==filter[key]).reduce((prev,current)=>prev && current, true)
+            return Object.keys(filter).map(key=>v[key]===filter[key]).reduce((prev,current)=>prev && current, true)
         })
     }else{
         return []
@@ -122,7 +122,7 @@ export const getPhaseTransitionTs = (state)=>{
         data.stats.forEach(stat=>{
             rtrn.push(stat.series[0].startTime)
             rtrn.push(stat.series[stat.series.length-1].startTime)
-            
+
             rtrn.push(stat.series[0].endTime)
             rtrn.push(stat.series[stat.series.length-1].endTime)
         })
@@ -155,29 +155,29 @@ export const getAlerts = (state)=>state.alert
 
 export const getAllTotals = createSelector(
     getStats(),
-    (stats)=>[... new Set(stats.map(v=>v.total))]
+    (stats) => [ ...new Set(stats.map(v=>v.total)) ]
 )
 //(state)=> state && state.data && state.data.stats ? state.data.stats.map(v=>v.total) : [];
 export const getAllNames = createSelector(
     getStats(),
-    (stats)=>[... new Set(stats.map(v=>v.name))]
+    (stats) => [ ...new Set(stats.map(v=>v.name)) ]
 )
 
 //(state)=>[...new Set( state && state.data && state.data.stats ? state.data.stats.map(v=>v.name) : [])];
 export const getAllPhaseNames = createSelector(
     getStats(),
-    (stats)=>[... new Set(stats.map(v=>v.phase))]
+    (stats) => [ ...new Set(stats.map(v=>v.phase)) ]
 )
 //(state)=>[...new Set( state && state.data && state.data.stats ? state.data.stats.map(v=>v.phase) : [])];
 export const getAllForkNames = createSelector(
     getStats(),
-    (stats)=>[... new Set(stats.map(v=>v.fork))]
+    (stats) => [ ...new Set(stats.map(v=>v.fork)) ]
 )
 
 //     (state)=>[...new Set(state && state.data && state.data.stats ? state.data.stats.map(v=>v.fork) : [])]
 export const getAllMetricNames = createSelector(
     getStats(),
-    (stats)=>[... new Set(stats.map(v=>v.metric))]
+    (stats) => [ ...new Set(stats.map(v=>v.metric)) ]
 )
 
 //(state)=>[...new Set(state && state.data && state.data.stats ? state.data.stats.map(v=>v.metric) : [])];
@@ -194,4 +194,3 @@ export const allRunsTotalsSelector = state => {
    const runs = hfalldata(state)
    return runs.reduce((m, d) => { m[d.info.id] = d.stats.map(s => s.total); return m }, {})
 }
-

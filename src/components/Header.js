@@ -13,8 +13,6 @@ import {
 import {
     CaretDownIcon,
     ExclamationCircleIcon,
-    WarningTriangleIcon
-
 } from '@patternfly/react-icons';
 
 import Popover from '@material-ui/core/Popover';
@@ -23,7 +21,7 @@ import { NavLink } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
 import { useSelector } from 'react-redux'
-import { getInfo, getAllNames, getAllFailures, currentRunIdSelector, allRunIdsSelector } from '../redux/selectors';
+import { getInfo, getAllNames, getAllFailures, allRunIdsSelector } from '../redux/selectors';
 import { selectRun } from '../redux/store'
 
 import theme from '../theme';
@@ -63,7 +61,6 @@ export default ({ logoProps = {} }) => {
     const info = useSelector(getInfo)
     const phases = useSelector(getAllNames)
     const failures = useSelector(getAllFailures)
-    const currentRunId = useSelector(currentRunIdSelector)
     const allRunIds = useSelector(allRunIdsSelector)
 
     const [runSelectExpanded, setRunSelectExpanded] = useState(false)
@@ -71,7 +68,7 @@ export default ({ logoProps = {} }) => {
 
     return (
         <PageHeader
-            toolbar={failures.length > 0 ? 
+            toolbar={failures.length > 0 ?
                 (
                     <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
                         <ToolbarGroup>
@@ -81,7 +78,7 @@ export default ({ logoProps = {} }) => {
                                     {failures.length}
                                 </Button>
                             </ToolbarItem>
-                        </ToolbarGroup>                        
+                        </ToolbarGroup>
                     </Toolbar>
                 )
                  :
@@ -104,7 +101,7 @@ export default ({ logoProps = {} }) => {
                         <NavItem itemId={2} isActive={false} onClick={(e, itemId) => { setOpen(!open) }}>
                             <span ref={linkEl} style={{ cursor: "pointer" }}>Phases<CaretDownIcon /></span>
                         </NavItem>
-                        {failures && !failures.length === 0 ?
+                        {failures && failures.length !== 0 ?
                             <NavItem itemId={3} isActive={false}>
                                 <NavLink exact={true} to="/failures" activeClassName="pf-m-current">
                                     Failures

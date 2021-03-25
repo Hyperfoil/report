@@ -5,16 +5,10 @@ import '@patternfly/patternfly/patternfly.css'; //have to use this import to cus
 //import "@patternfly/react-core/dist/styles/base.css";
 
 import { Provider } from 'react-redux'
-import { Route, Switch } from 'react-router'
+import { Route } from 'react-router'
 import CacheRoute, { CacheSwitch } from 'react-router-cache-route'
 
 import { ConnectedRouter } from 'connected-react-router'
-
-import { Helmet } from "react-helmet";
-import { 
-    Page, 
-} from '@patternfly/react-core';  
-
 
 import './index.css';
 
@@ -30,11 +24,6 @@ import Comparison from './pages/Comparison'
 
 import store, {history} from './redux/store';
 
-
-
-
-
-  //
 ReactDOM.render(
     <Provider store={store}>
         <ConnectedRouter history={history}>
