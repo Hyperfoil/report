@@ -43,7 +43,7 @@ const statAccessors = [
    // We don't divide the request count by duration since the union interval from different agents
    // is often > 1000 ms while we know that on each agent the stats have been collected for only 1 second
    { name: "rps", accessor: v => v.requestCount },
-   { name: "eps", accessor: v => v.status_5xx + v.status_4xx + v.status_other + v.resetCount + v.timeouts },
+   { name: "eps", accessor: v => v.extensions.http.status_5xx + v.extensions.http.status_4xx + v.extensions.http.status_other + v.connectionErrors + v.requestTimeouts },
 ]
 
 const colors = theme.colors.chart

@@ -58,7 +58,6 @@ function ConnectionsChart({ data, agent, width, height, domain }) {
       if (!active) {
          return <div />;
       }
-      const item = (payload && payload.length > 0 && payload[0].payload) || {}
       return (
          <div className="recharts-default-tooltip" style={{ background: "white", border: "1px solid black" }}>
             <table id="toolTip">
@@ -71,7 +70,7 @@ function ConnectionsChart({ data, agent, width, height, domain }) {
                </tr>
                </thead>
                <tbody>
-                  { payload.map(({name, value}, i) => (
+                  { payload && payload.map(({name, value}, i) => (
                      <tr key={i}>
                         <td><span className="legend-icon" style={{borderColor: colors[i] }}>{'\u00A0'}</span></td>
                         <td style={{ textAlign: "left"}}>{name}</td>
@@ -115,7 +114,7 @@ export default () => {
     const agents = useSelector(getAgentNames)
 
     const domains = useMemo(() => Object.values(allConnections)
-      .flatMap(targetConns => Object.values(targetConns))
+      .flatMap(targetConns => Object.values(targetConns)).flat()
       .reduce((acc, { timestamp, min, max }) => [
          Math.min(acc[0], timestamp), Math.max(acc[1], timestamp),
          Math.min(acc[2], min), Math.max(acc[3], max) ],

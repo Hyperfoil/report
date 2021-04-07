@@ -7,7 +7,7 @@ import fetchival from 'fetchival';
 
 export const history = createHashHistory();//createBrowserHistory();//
 
-const DATA_SCHEMA = "http://hyperfoil.io/run-schema/v2.0"
+const DATA_SCHEMA = "http://hyperfoil.io/run-schema/v3.0"
 
 const LOADED = "data/loaded";
 const SELECT_RUN = "data/select_run"

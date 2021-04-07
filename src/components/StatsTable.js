@@ -31,43 +31,43 @@ const columns = [
        headerStyle: right,
        style: right,
      }, {
-       Header: "2xx",
-       accessor: "summary.status_2xx",
-       headerStyle: right,
-       style: right,
-     }, {
-       Header: "3xx",
-       accessor: "summary.status_3xx",
-       headerStyle: right,
-       style: right,
-     }, {
-       Header: "4xx",
-       accessor: "summary.status_4xx",
-       headerStyle: right,
-       style: right,
-     }, {
-       Header: "5xx",
-       accessor: "summary.status_5xx",
-       headerStyle: right,
-       style: right,
-     }, {
        Header: "Invalid",
        accessor: "summary.invalid",
        headerStyle: right,
        style: right,
      }, {
        Header: "Timeouts",
-       accessor: "summary.timeouts",
-       headerStyle: right,
-       style: right,
-     }, {
-       Header: "Cache hits",
-       accessor: "summary.cacheHits",
+       accessor: "summary.requestTimeouts",
        headerStyle: right,
        style: right,
      }, {
        Header: "Blocked",
        accessor: "summary.blockedTime",
+       headerStyle: right,
+       style: right,
+     }, {
+       Header: "2xx",
+       accessor: "summary.extensions.http.status_2xx",
+       headerStyle: right,
+       style: right,
+     }, {
+       Header: "3xx",
+       accessor: "summary.extensions.http.status_3xx",
+       headerStyle: right,
+       style: right,
+     }, {
+       Header: "4xx",
+       accessor: "summary.extensions.http.status_4xx",
+       headerStyle: right,
+       style: right,
+     }, {
+       Header: "5xx",
+       accessor: "summary.extensions.http.status_5xx",
+       headerStyle: right,
+       style: right,
+     }, {
+       Header: "Cache hits",
+       accessor: "summary.extensions.http.cacheHits",
        headerStyle: right,
        style: right,
      }
