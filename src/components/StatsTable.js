@@ -43,6 +43,7 @@ const columns = [
      }, {
        Header: "Blocked",
        accessor: "summary.blockedTime",
+       Cell: arg => Number(arg.cell.value / 1000000.0).toFixed(0) + " ms",
        headerStyle: right,
        style: right,
      }, {

@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import { AutoSizer } from 'react-virtualized';
 import { DateTime } from 'luxon';
+import { useParams } from "react-router"
 import OverloadTooltip from '../components/OverloadTooltip'
 import theme from '../theme';
 import {
@@ -125,276 +126,266 @@ const domainSelector = createSelector(
     getDomain
 );
 
-export default () => {
-
+function Section({ forkName, metricName }) {
     const stats = useSelector(getStats());
-    const forkNames = useSelector(getAllForkNames);
-    const metricNames = useSelector(getAllMetricNames);
-
     const fullDomain = useSelector(domainSelector);
     const [currentDomain, setDomain] = useState(fullDomain);
 
     const zoom = useZoom();
 
-    const sections = useMemo(()=>{
-        if(currentDomain[0] !== fullDomain[0] || currentDomain[1] !== fullDomain[1]){
-            setDomain(fullDomain)
+    const phaseTransitionTs = getPhaseTransitionTs(stats
+        ).filter(v => v > currentDomain[0] && v < currentDomain[1]);
+
+    const forkMetric_stats = stats.filter(v => (!forkName || v.fork === forkName) && v.metric === metricName)
+
+    const maxResponseTimes = forkMetric_stats.map(v => v.total.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
+    // We need to use functional range to reduce the domain below dataMax
+    const responseTimeDomain = [0, dataMax => maxResponseTimes[Math.floor(maxResponseTimes.length * 0.8)] * 2]
+
+    const phaseNames = [...new Set(forkMetric_stats.map(v=>v.phase))]
+    phaseNames.sort()
+    const series = forkMetric_stats.flatMap(v=>v.series.map(entry=>{
+        entry._pif = v.name
+        return entry;
+    }))
+
+    if (series.length == 0){
+        return "No data for fork " + forkName + " and metric " + metricName
+    }
+    const phaseIds = [...new Set(series.map(v=>v._pif))]
+
+    const timetable = phasesTimetable(
+        series,
+        statAccessors
+    )
+    .filter(v =>
+        (v.start <= currentDomain[1] && v.start >= currentDomain[0]) ||
+        (v.end >= currentDomain[0] && v.end <= currentDomain[1])
+    )
+
+    let colorIndex = -1;
+    const areas = [];
+    const rightLines = [];
+    const legendPayload = []
+    const tooltipExtra = []
+
+    phaseNames.forEach((phaseName,phaseIndex)=>{
+        colorIndex++;
+        if(colorIndex >= colorNames.length){
+            colorIndex = 0;
         }
+        const pallet = colors[colorNames[colorIndex]];
 
-
-        const rtrn = [];
-
-        const phaseTransitionTs = getPhaseTransitionTs(stats
-                // , v=>v.startTime-v.startTime%1000
-                // , v=>v.endTime-v.endTime%1000
-            ).filter(v => v > currentDomain[0] && v < currentDomain[1]);
-
-        forkNames.forEach(forkName=>{
-            metricNames.forEach(metricName=>{
-                const forkMetric_stats = stats.filter(v=>v.fork === forkName && v.metric === metricName)
-
-                const maxResponseTimes = forkMetric_stats.map(v => v.total.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
-                // We need to use functional range to reduce the domain below dataMax
-                const responseTimeDomain = [0, dataMax => maxResponseTimes[Math.floor(maxResponseTimes.length * 0.8)] * 2]
-
-                const phaseNames = [...new Set(forkMetric_stats.map(v=>v.phase))]
-                phaseNames.sort()
-                const series = forkMetric_stats.flatMap(v=>v.series.map(entry=>{
-                    entry._pif = v.name
-                    return entry;
-                }))
-                if(series.length > 0){
-                    const phaseIds = [...new Set(series.map(v=>v._pif))]
-
-
-                    const timetable = phasesTimetable(
-                        series,
-                        statAccessors
-                        // ,
-                        // v=>v.startTime-v.startTime%1000 ,
-                        // v=>v.endTime-v.endTime%1000,
-                        // v=>v._pif
-                    )
-                    .filter(v =>
-                        (v.start <= currentDomain[1] && v.start >= currentDomain[0]) ||
-                        (v.end >= currentDomain[0] && v.end <= currentDomain[1])
-                    )
-
-                    let colorIndex = -1;
-                    const areas = [];
-                    const rightLines = [];
-                    const legendPayload = []
-                    const tooltipExtra = []
-
-                    phaseNames.forEach((phaseName,phaseIndex)=>{
-                        colorIndex++;
-                        if(colorIndex >= colorNames.length){
-                            colorIndex = 0;
-                        }
-                        const pallet = colors[colorNames[colorIndex]];
-
-                        phaseIds.filter(phaseId=>phaseId.startsWith(phaseName)).forEach(phaseId =>{
-                            percentiles.forEach((statName,statIndex)=>{
-                                const color = pallet[statIndex % pallet.length]
-                                areas.push(
-                                    <Area
-                                        key={`${phaseId}_${statName}`}
-                                        name={statName}
-                                        dataKey={`${phaseId}_${statName}`}
-                                        stroke={color}
-                                        unit="ns"
-                                        fill={color}
-                                        connectNulls={true} //needs to be true for cases of overlap betweeen phases
-                                        type="monotone"
-                                        yAxisId={0}
-                                        isAnimationActive={false}
-                                        style={{ opacity: 0.5 }}
-                                    />
-                                )
-                            })
-                            rightLines.push(
-                                <Line
-                                    key={`${phaseId}_Mean`}
-                                    unit="ns"
-                                    yAxisId={0}
-                                    name={"Mean"}
-                                    dataKey={`${phaseId}_Mean`}
-                                    stroke={"#FF0000"}
-                                    fill={"#FF0000"}
-                                    connectNulls={true}
-                                    dot={false}
-                                    isAnimationActive={false}
-                                    style={{ strokeWidth: 1 }}
-                                />
-                            )
-                            rightLines.push(
-                                <Line
-                                    key={`${phaseId}_rps`}
-                                    yAxisId={1}
-                                    name={"Requests/s"}
-                                    dataKey={`${phaseId}_rps`}
-                                    stroke={"#00A300"}
-                                    fill={"#00A300"}
-                                    connectNulls={true}
-                                    dot={false}
-                                    isAnimationActive={false}
-                                    style={{ strokeWidth: 1 }}
-                                />
-                            )
-                            rightLines.push(
-                                <Line
-                                     key={`${phaseId}_eps`}
-                                     yAxisId={2}
-                                     name={"Errors/s"}
-                                     dataKey={`${phaseId}_eps`}
-                                     stroke={"#A30000"}
-                                     fill={"#A30000"}
-                                     connectNulls={true}
-                                     dot={false}
-                                     isAnimationActive={false}
-                                     style={{ strokeWidth: 1 }}
-                                />
-                            )
-                        })
-                        legendPayload.push({
-                            color: pallet[0],
-                            fill: pallet[0],
-                            type: 'rect',
-                            value: phaseName
-                        })
-                    })
-                    legendPayload.push({
-                        color: '#FF0000',
-                        fill: '#FF0000',
-                        type: 'rect',
-                        value: "Mean"
-                    })
-                    legendPayload.push({
-                        color: '#00A300',
-                        fill: '#00A300',
-                        type: 'rect',
-                        value: "Requests/s"
-                    })
-                    legendPayload.push({
-                        color: '#A30000',
-                        fill: '#A30000',
-                        type: 'rect',
-                        value: "Errors/s"
-                    })
-                    rtrn.push(
-                        <React.Fragment key={`${forkName}.${metricName}`}>
-                            <Card style={{ pageBreakInside: 'avoid'}}>
-                                <CardHeader>
-                                    <Toolbar className="">
-                                        <ToolbarGroup>
-                                            <ToolbarItem>
-                                                {`${forkName} ${metricName} response times`}
-                                            </ToolbarItem>
-                                        </ToolbarGroup>
-                                    </Toolbar>
-                                </CardHeader>
-                                <CardBody style={{ minHeight: 400 }} onDoubleClick={ e => {
-                                    setDomain(fullDomain)
-                                }}>
-                                    <AutoSizer>{({height, width}) =>{
-                                        return (
-                                            <ComposedChart
-                                                width={width}
-                                                height={height}
-                                                data={timetable}
-                                                onMouseDown={e => {
-                                                    if (e) {
-                                                        zoom.setLeft(e.activeLabel);
-                                                        zoom.setRight(e.activeLabel)
-
-                                                        if (e.stopPropagation) e.stopPropagation();
-                                                        if (e.preventDefault) e.preventDefault();
-                                                        e.cancelBubble = true;
-                                                        e.returnValue = false;
-                                                        return false;
-                                                    }
-                                                    return false;
-                                                }}
-                                                onMouseMove={e => {
-                                                    if (zoom.left) {
-                                                        const r = e.activeLabel ?
-                                                            e.activeLabel :
-                                                            zoom.right > zoom.left ?
-                                                                currentDomain[1] :
-                                                                currentDomain[0]
-                                                        zoom.setRight(r)
-                                                    }
-                                                    return false;
-                                                }}
-                                                onMouseUp={e => {
-                                                    if (zoom.left && zoom.right && zoom.left !== zoom.right) {
-                                                        let newDomain = [zoom.left, zoom.right];
-                                                        if (zoom.left > zoom.right) {
-                                                            newDomain = [zoom.right, zoom.left];
-                                                        }
-                                                        setDomain(newDomain);
-                                                    }
-                                                    zoom.setLeft(false);
-                                                    zoom.setRight(false)
-                                                }}
-
-                                                style={{ userSelect: 'none' }}
-                                            >
-                                                <CartesianGrid strokeDasharray="3 3" />
-                                                <XAxis
-                                                    allowDataOverflow={true}
-                                                    type="number"
-                                                    scale="time"
-                                                    dataKey="_areaKey"
-                                                    ticks={phaseTransitionTs}
-                                                    tickFormatter={tsToHHmmss}
-                                                    //domain={domain}
-                                                    domain={currentDomain}
-                                                />
-                                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={responseTimeDomain}>
-                                                    <Label value="response time" position="insideLeft" angle={-90} style={{ textAnchor: 'middle' }}/>
-                                                </YAxis>
-                                                <YAxis yAxisId={1} orientation="right">
-                                                    <Label value="requests/s" position="insideRight" angle={-90} style={{ textAnchor: 'middle' }} />
-                                                </YAxis>
-                                                <YAxis yAxisId={2} orientation="right">
-                                                    <Label value="errors/s" position="insideRight" angle={-90} style={{ textAnchor: 'middle' }} />
-                                                </YAxis>
-                                                <Tooltip
-                                                    content={
-                                                        <OverloadTooltip
-                                                            active={true}
-                                                            extra={tooltipExtra}
-                                                        />
-                                                    }
-                                                    labelFormatter={tsToHHmmss}
-                                                    formatter={(e) => Number(e).toFixed(0)}
-                                                />
-                                                <Legend payload={legendPayload} align="left" />
-
-                                                {areas}
-                                                {rightLines}
-                                                {zoom.left && zoom.right ?
-                                                    (<ReferenceArea yAxisId={0} x1={zoom.left} x2={zoom.right} strokeOpacity={0.3} />)
-                                                    : undefined
-                                                }
-                                            </ComposedChart>
-                                        )
-                                    }}</AutoSizer>
-                                </CardBody>
-                            </Card>
-                        </React.Fragment>
-                    )
-                }
-
-
-
+        phaseIds.filter(phaseId=>phaseId.startsWith(phaseName)).forEach(phaseId =>{
+            percentiles.forEach((statName,statIndex)=>{
+                const color = pallet[statIndex % pallet.length]
+                areas.push(
+                    <Area
+                        key={`${phaseId}_${statName}`}
+                        name={statName}
+                        dataKey={`${phaseId}_${statName}`}
+                        stroke={color}
+                        unit="ns"
+                        fill={color}
+                        connectNulls={true} //needs to be true for cases of overlap betweeen phases
+                        type="monotone"
+                        yAxisId={0}
+                        isAnimationActive={false}
+                        style={{ opacity: 0.5 }}
+                    />
+                )
             })
+            rightLines.push(
+                <Line
+                    key={`${phaseId}_Mean`}
+                    unit="ns"
+                    yAxisId={0}
+                    name={"Mean"}
+                    dataKey={`${phaseId}_Mean`}
+                    stroke={"#FF0000"}
+                    fill={"#FF0000"}
+                    connectNulls={true}
+                    dot={false}
+                    isAnimationActive={false}
+                    style={{ strokeWidth: 1 }}
+                />
+            )
+            rightLines.push(
+                <Line
+                    key={`${phaseId}_rps`}
+                    yAxisId={1}
+                    name={"Requests/s"}
+                    dataKey={`${phaseId}_rps`}
+                    stroke={"#00A300"}
+                    fill={"#00A300"}
+                    connectNulls={true}
+                    dot={false}
+                    isAnimationActive={false}
+                    style={{ strokeWidth: 1 }}
+                />
+            )
+            rightLines.push(
+                <Line
+                        key={`${phaseId}_eps`}
+                        yAxisId={2}
+                        name={"Errors/s"}
+                        dataKey={`${phaseId}_eps`}
+                        stroke={"#A30000"}
+                        fill={"#A30000"}
+                        connectNulls={true}
+                        dot={false}
+                        isAnimationActive={false}
+                        style={{ strokeWidth: 1 }}
+                />
+            )
         })
-        return rtrn;
-    },[stats,forkNames,metricNames,currentDomain,setDomain,fullDomain,zoom])
+        legendPayload.push({
+            color: pallet[0],
+            fill: pallet[0],
+            type: 'rect',
+            value: phaseName
+        })
+    })
+    legendPayload.push({
+        color: '#FF0000',
+        fill: '#FF0000',
+        type: 'rect',
+        value: "Mean"
+    })
+    legendPayload.push({
+        color: '#00A300',
+        fill: '#00A300',
+        type: 'rect',
+        value: "Requests/s"
+    })
+    legendPayload.push({
+        color: '#A30000',
+        fill: '#A30000',
+        type: 'rect',
+        value: "Errors/s"
+    })
+    return (
+        <React.Fragment key={`${forkName}.${metricName}`}>
+            <Card style={{ pageBreakInside: 'avoid'}}>
+                <CardHeader>
+                    <Toolbar className="">
+                        <ToolbarGroup>
+                            <ToolbarItem>
+                                {`${forkName} ${metricName} response times`}
+                            </ToolbarItem>
+                        </ToolbarGroup>
+                    </Toolbar>
+                </CardHeader>
+                <CardBody style={{ minHeight: 400 }} onDoubleClick={ e => {
+                    setDomain(fullDomain)
+                }}>
+                    <AutoSizer>{({height, width}) =>{
+                        return (
+                            <ComposedChart
+                                width={width}
+                                height={height}
+                                data={timetable}
+                                onMouseDown={e => {
+                                    if (e) {
+                                        zoom.setLeft(e.activeLabel);
+                                        zoom.setRight(e.activeLabel)
+
+                                        if (e.stopPropagation) e.stopPropagation();
+                                        if (e.preventDefault) e.preventDefault();
+                                        e.cancelBubble = true;
+                                        e.returnValue = false;
+                                        return false;
+                                    }
+                                    return false;
+                                }}
+                                onMouseMove={e => {
+                                    if (zoom.left) {
+                                        const r = e.activeLabel ?
+                                            e.activeLabel :
+                                            zoom.right > zoom.left ?
+                                                currentDomain[1] :
+                                                currentDomain[0]
+                                        zoom.setRight(r)
+                                    }
+                                    return false;
+                                }}
+                                onMouseUp={e => {
+                                    if (zoom.left && zoom.right && zoom.left !== zoom.right) {
+                                        let newDomain = [zoom.left, zoom.right];
+                                        if (zoom.left > zoom.right) {
+                                            newDomain = [zoom.right, zoom.left];
+                                        }
+                                        setDomain(newDomain);
+                                    }
+                                    zoom.setLeft(false);
+                                    zoom.setRight(false)
+                                }}
+
+                                style={{ userSelect: 'none' }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis
+                                    allowDataOverflow={true}
+                                    type="number"
+                                    scale="time"
+                                    dataKey="_areaKey"
+                                    ticks={phaseTransitionTs}
+                                    tickFormatter={tsToHHmmss}
+                                    //domain={domain}
+                                    domain={currentDomain}
+                                />
+                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={responseTimeDomain}>
+                                    <Label value="response time" position="insideLeft" angle={-90} style={{ textAnchor: 'middle' }}/>
+                                </YAxis>
+                                <YAxis yAxisId={1} orientation="right">
+                                    <Label value="requests/s" position="insideRight" angle={-90} style={{ textAnchor: 'middle' }} />
+                                </YAxis>
+                                <YAxis yAxisId={2} orientation="right">
+                                    <Label value="errors/s" position="insideRight" angle={-90} style={{ textAnchor: 'middle' }} />
+                                </YAxis>
+                                <Tooltip
+                                    content={
+                                        <OverloadTooltip
+                                            active={true}
+                                            extra={tooltipExtra}
+                                        />
+                                    }
+                                    labelFormatter={tsToHHmmss}
+                                    formatter={(e) => Number(e).toFixed(0)}
+                                />
+                                <Legend payload={legendPayload} align="left" />
+
+                                {areas}
+                                {rightLines}
+                                {zoom.left && zoom.right ?
+                                    (<ReferenceArea yAxisId={0} x1={zoom.left} x2={zoom.right} strokeOpacity={0.3} />)
+                                    : undefined
+                                }
+                            </ComposedChart>
+                        )
+                    }}</AutoSizer>
+                </CardBody>
+            </Card>
+        </React.Fragment>
+    )
+}
+
+export function Metric() {
+    const params = useParams()
+    //TODO: get fork?
+    return <Section forkName="" metricName={params.metric} />
+}
+
+export default () => {
+    const forkNames = useSelector(getAllForkNames);
+    const metricNames = useSelector(getAllMetricNames);
 
     return (
-        <React.Fragment>{sections}</React.Fragment>
+        <React.Fragment>{forkNames.flatMap(forkName => metricNames.map(metricName => (
+            <Section
+                forkName={ forkName }
+                metricName={ metricName }
+            />
+        )))}</React.Fragment>
     )
 }
