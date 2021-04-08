@@ -106,23 +106,28 @@ export default ({ logoProps = {} }) => {
                                 Connections
                             </NavLink>
                         </NavItem>
+                        <NavItem itemId={4} isActive={false}>
+                            <NavLink exact={true} to="/sessions" activeClassName="pf-m-current">
+                                Sessions
+                            </NavLink>
+                        </NavItem>
                         {failures && failures.length !== 0 ?
-                            <NavItem itemId={4} isActive={false}>
+                            <NavItem itemId={5} isActive={false}>
                                 <NavLink exact={true} to="/failures" activeClassName="pf-m-current">
                                     Failures
                                 </NavLink>
                             </NavItem> : null
                         }
-                        <NavItem itemId={5} isActive={false}>
+                        <NavItem itemId={6} isActive={false}>
                             <NavLink exact={true} to="/cpu" activeClassName="pf-m-current">
                               CPU
                             </NavLink>
                         </NavItem>
                         { allRunIds.length > 1 && <>
-                           <NavItem itemId={6} isActive={false} onClick={(e, itemId) => { setRunSelectExpanded(!runSelectExpanded) }}>
+                           <NavItem itemId={7} isActive={false} onClick={(e, itemId) => { setRunSelectExpanded(!runSelectExpanded) }}>
                                <span ref={runsEl} style={{ cursor: "pointer" }}>Select run<CaretDownIcon /></span>
                            </NavItem>
-                           <NavItem itemId={7} isActive={false}>
+                           <NavItem itemId={8} isActive={false}>
                                <NavLink exact={true} to="/comparison" activeClassName="pf-m-current">
                                  Comparison
                                </NavLink>

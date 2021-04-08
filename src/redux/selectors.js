@@ -204,3 +204,8 @@ export const getAgentNames = state => {
    const data = hfdata(state)
    return data && data.agents ? data.agents.map(a => a.name) : []
 }
+
+export const getSessions = state => {
+    const data = hfdata(state)
+    return data && data.sessions ? data.sessions : []
+}

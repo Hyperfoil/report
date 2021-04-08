@@ -29,8 +29,8 @@ function ConnectionsChart({ data, agent, width, height, domain }) {
 
    const chartData = useMemo(() => {
       const byTimestamp = {}
-      Object.entries(data).forEach(([type, values]) => values.forEach(({ timestamp, address, min, max }) => {
-         if (address === agent) {
+      Object.entries(data).forEach(([type, values]) => values.forEach(({ timestamp, agent: a, min, max }) => {
+         if (a === agent) {
             let dp = byTimestamp[timestamp]
             if (!dp) {
                dp = { timestamp }
@@ -39,8 +39,8 @@ function ConnectionsChart({ data, agent, width, height, domain }) {
             dp[type] = [ min, max ]
          }
       }))
-      return Object.values(byTimestamp).sort((a, b) => a._areaKey - b._areaKey)
-   }, [data])
+      return Object.values(byTimestamp).sort((a, b) => a.timestamp - b.timestamp)
+   }, [data, agent])
 
    const areas = Object.keys(data).sort().map((type, i) =>
       <Area
@@ -132,7 +132,7 @@ export default () => {
                      t1 = t1.toLowerCase()
                      t2 = t2.toLowerCase()
                      if (t1 < t2) return -1;
-                     if (t2 > t1) return 1;
+                     if (t1 > t2) return 1;
                      return 0
                   }).map(([target, data]) => <React.Fragment key={target}>
                      <h2>Endpoint: { target }</h2>

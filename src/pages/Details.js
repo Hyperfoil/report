@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux'
 import { createSelector } from 'reselect'
 import {
@@ -149,7 +149,7 @@ function Section({ forkName, metricName }) {
         return entry;
     }))
 
-    if (series.length == 0){
+    if (series.length === 0){
         return "No data for fork " + forkName + " and metric " + metricName
     }
     const phaseIds = [...new Set(series.map(v=>v._pif))]
@@ -372,8 +372,7 @@ function Section({ forkName, metricName }) {
 
 export function Metric() {
     const params = useParams()
-    //TODO: get fork?
-    return <Section forkName="" metricName={params.metric} />
+    return <Section forkName={ params.fork || "" } metricName={params.metric} />
 }
 
 export default () => {
