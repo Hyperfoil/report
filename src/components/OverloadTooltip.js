@@ -3,6 +3,9 @@ import React from 'react';
 import DefaultTooltipContent from 'recharts/lib/component/DefaultTooltipContent';
 
 export default ({extra=[],...props})=>{
+    if (!props.payload) {
+        return <></>
+    }
     props.payload.forEach((payload,index)=>{
         if(payload.unit === "ns"){
             payload.value = payload.value/1000000.0;

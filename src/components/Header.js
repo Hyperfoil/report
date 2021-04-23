@@ -93,11 +93,6 @@ export default ({ logoProps = {} }) => {
                                 <Helmet><title>{info.id || "HF:report"}</title></Helmet>{/*Moved here because PageHeader does not render children*/}
                             </NavLink>
                         </NavItem>
-                        <NavItem itemId={1} isActive={false}>
-                            <NavLink exact={true} to="/details" activeClassName="pf-m-current">
-                                Details
-                            </NavLink>
-                        </NavItem>
                         <NavItem itemId={2} isActive={false} onClick={(e, itemId) => { setOpen(!open) }}>
                             <span ref={linkEl} style={{ cursor: "pointer" }}>Phases<CaretDownIcon /></span>
                         </NavItem>

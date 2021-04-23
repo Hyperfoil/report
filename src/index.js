@@ -15,8 +15,7 @@ import './index.css';
 
 import Layout from './components/Layout';
 
-import Summary from './pages/Summary';
-import Details, { Metric } from './pages/Details';
+import Summary, { Metric } from './pages/Summary';
 import Phase from './pages/Phase';
 import Connections from './pages/Connections'
 import Sessions, { PhaseSessions } from './pages/Sessions'
@@ -32,7 +31,7 @@ ReactDOM.render(
             <Layout>
                 <CacheSwitch>
                     <CacheRoute exact path="/" component={Summary} />
-                    <CacheRoute exact path="/details" component={Details} />
+                    <CacheRoute exact path="/details" component={Summary} />
                     <Route path="/details/:metric/:fork" component={ Metric } />
                     <Route path="/details/:metric" component={ Metric } />
                     <Route path="/phase/:phaseId*" render={
