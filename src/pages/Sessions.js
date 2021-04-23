@@ -30,6 +30,7 @@ function SessionsChart({ phase, fork, width, height }) {
 
    const chartData = useMemo(() => {
       const byTimestamp = {}
+      const lastValues = {}
       sessions.filter(p => p.phase === phase && p.fork === fork)
          .forEach(p => p.sessions.forEach(({ timestamp, agent, minSessions, maxSessions }) => {
          let dp = byTimestamp[timestamp]
@@ -38,8 +39,19 @@ function SessionsChart({ phase, fork, width, height }) {
             byTimestamp[timestamp] = dp
          }
          dp[agent] = [ minSessions, maxSessions ]
+         lastValues[agent] = [0, 0]
       }))
-      return Object.values(byTimestamp).sort((a, b) => a.timestamp - b.timestamp)
+      const sorted = Object.values(byTimestamp).sort((a, b) => a.timestamp - b.timestamp)
+      for (let dp of sorted) {
+         for (let a of Object.keys(lastValues)) {
+            if (!dp[a]) {
+               dp[a] = lastValues[a]
+            } else {
+               lastValues[a] = dp[a]
+            }
+         }
+      }
+      return sorted;
    }, [sessions, phase, fork])
 
    const domain = useMemo(() => {
@@ -66,8 +78,10 @@ function SessionsChart({ phase, fork, width, height }) {
       if (!active) {
          return <div />;
       }
+      const timestamp = payload && payload[0].payload.timestamp
       return (
          <div className="recharts-default-tooltip" style={{ background: "white", border: "1px solid black" }}>
+            <span style={{ margin: "5px" }}>{ timestamp && tsToHHmmss(timestamp) }</span>
             <table id="toolTip">
                <thead>
                <tr>
