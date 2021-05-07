@@ -4,6 +4,17 @@ import Table from './Table'
 
 const right = { textAlign: "right" }
 
+function toMs(nanos) {
+  const ms = nanos / 1000_000.0
+  if (nanos === 0) {
+    return "0 ms"
+  } else if (ms >= 100) {
+    return Number(ms).toFixed(0) + " ms"
+  } else {
+    return Number(ms).toPrecision(3) + " ms"
+  }
+}
+
 const columns = [
      {
        Header: "Start",
@@ -27,7 +38,7 @@ const columns = [
      }, {
        Header: "Mean",
        accessor: "summary.meanResponseTime",
-       Cell: arg => Number(arg.cell.value / 1000000.0).toFixed(0) + " ms",
+       Cell: arg => toMs(arg.cell.value),
        headerStyle: right,
        style: right,
      }, {
@@ -43,7 +54,7 @@ const columns = [
      }, {
        Header: "Blocked",
        accessor: "summary.blockedTime",
-       Cell: arg => Number(arg.cell.value / 1000000.0).toFixed(0) + " ms",
+       Cell: arg => toMs(arg.cell.value),
        headerStyle: right,
        style: right,
      }, {
