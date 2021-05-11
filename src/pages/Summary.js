@@ -46,7 +46,7 @@ const statAccessors = [
    // We don't divide the request count by duration since the union interval from different agents
    // is often > 1000 ms while we know that on each agent the stats have been collected for only 1 second
    { name: "rps", accessor: v => v.requestCount },
-   { name: "eps", accessor: v => v.extensions.http.status_5xx + v.extensions.http.status_4xx + v.extensions.http.status_other + v.connectionErrors + v.requestTimeouts },
+   { name: "eps", accessor: v => (v.extensions.http ? v.extensions.http.status_5xx + v.extensions.http.status_4xx + v.extensions.http.status_other : 0) + v.connectionErrors + v.requestTimeouts},
 ]
 
 const colors = theme.colors.chart
@@ -385,6 +385,7 @@ export default () => {
     return (<>
         {forkNames.flatMap(forkName => metricNames.map(metricName => (
             <Section
+                key={ forkName + "_" + metricName }
                 forkName={ forkName }
                 metricName={ metricName }
             />
