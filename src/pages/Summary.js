@@ -101,6 +101,9 @@ const phasesTimetable = (data = [], stats = [], getStart = v => v.startTime, get
 const getPhaseTransitionTs = (data = [], getStart = (v) => v.startTime, getEnd = v => v.endTime) => {
     const rtrn = []
     data.forEach(entry=>{
+        if (entry.series.length === 0) {
+            return
+        }
         rtrn.push(getStart(entry.series[0]))
         rtrn.push(getStart(entry.series[entry.series.length - 1]))
         rtrn.push(getEnd(entry.series[0]))
