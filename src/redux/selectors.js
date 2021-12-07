@@ -104,7 +104,7 @@ export const allRunIdsSelector = state => hfalldata(state).map(run => run.info.i
 export const getStats = (filter={}) => (state)=>{
     const data = hfdata(state)
     if (data && data.stats){
-        return data.stats.filter(v=>{
+        return data.stats.filter(v => !v.isWarmup).filter(v=>{
             return Object.keys(filter).map(key=>v[key]===filter[key]).reduce((prev,current)=>prev && current, true)
         })
     }else{

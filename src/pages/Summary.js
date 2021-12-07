@@ -141,7 +141,7 @@ function Section({ forkName, metricName }) {
     const phaseTransitionTs = getPhaseTransitionTs(stats
         ).filter(v => v > currentDomain[0] && v < currentDomain[1]);
 
-    const forkMetric_stats = stats.filter(v => (!forkName || v.fork === forkName) && v.metric === metricName)
+    const forkMetric_stats = stats.filter(v => ((!forkName && !v.fork) || v.fork === forkName) && v.metric === metricName)
 
     const maxResponseTimes = forkMetric_stats.map(v => v.total.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
     // We need to use functional range to reduce the domain below dataMax
@@ -155,7 +155,7 @@ function Section({ forkName, metricName }) {
     }))
 
     if (series.length === 0){
-        return "No data for fork " + forkName + " and metric " + metricName
+        return null;
     }
     const phaseIds = [...new Set(series.map(v=>v._pif))]
 
@@ -276,7 +276,7 @@ function Section({ forkName, metricName }) {
                     <Toolbar className="">
                         <ToolbarGroup>
                             <ToolbarItem>
-                                {`${forkName} ${metricName} response times`}
+                                {`${forkName}${forkName ? "/" : ""}${metricName} response times`}
                             </ToolbarItem>
                         </ToolbarGroup>
                     </Toolbar>
