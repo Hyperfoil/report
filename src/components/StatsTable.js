@@ -42,6 +42,12 @@ const columns = [
        headerStyle: right,
        style: right,
      }, {
+       Header: "Std Dev",
+       accessor: "summary.stdDevResponseTime",
+       Cell: arg => toMs(arg.cell.value),
+       headerStyle: right,
+       style: right,
+     }, {
        Header: "Invalid",
        accessor: "summary.invalid",
        headerStyle: right,
