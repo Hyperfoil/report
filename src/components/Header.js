@@ -21,7 +21,7 @@ import { NavLink } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
 import { useSelector } from 'react-redux'
-import { getCpu, getInfo, getAllNames, getAllFailures, allRunIdsSelector } from '../redux/selectors';
+import { getCpu, getInfo, getAllNames, getAllFailures, allRunIdsSelector, getAllErrors } from '../redux/selectors';
 import { selectRun } from '../redux/store'
 
 import theme from '../theme';
@@ -61,6 +61,7 @@ export default ({ logoProps = {} }) => {
     const info = useSelector(getInfo)
     const phases = useSelector(getAllNames)
     const failures = useSelector(getAllFailures)
+    const errors = useSelector(getAllErrors)
     const allRunIds = useSelector(allRunIdsSelector)
     const cpu = useSelector(getCpu)
 
@@ -69,21 +70,20 @@ export default ({ logoProps = {} }) => {
 
     return (
         <PageHeader
-            toolbar={failures.length > 0 ?
+            toolbar={(failures.length > 0 || errors.length > 0) ?
                 (
                     <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
                         <ToolbarGroup>
                             <ToolbarItem color={theme.colors.alert.danger[100]}>
                                 <Button variant="plain">
                                     <ExclamationCircleIcon fill={theme.colors.alert.danger[100]}/>
-                                    {failures.length}
+                                    {failures.length + errors.length}
                                 </Button>
                             </ToolbarItem>
                         </ToolbarGroup>
                     </Toolbar>
                 )
-                 :
-                null
+                : null
             }
             topNav={(<>
                 <Nav aria-label="Nav">
@@ -114,18 +114,25 @@ export default ({ logoProps = {} }) => {
                                 </NavLink>
                             </NavItem> : null
                         }
-                        { cpu.length > 0 &&
+                        {errors && errors.length !== 0 ?
                             <NavItem itemId={6} isActive={false}>
+                                <NavLink exact={true} to="/errors" activeClassName="pf-m-current">
+                                    Errors
+                                </NavLink>
+                            </NavItem> : null
+                        }
+                        { cpu.length > 0 &&
+                            <NavItem itemId={7} isActive={false}>
                                 <NavLink exact={true} to="/cpu" activeClassName="pf-m-current">
                                 CPU
                                 </NavLink>
                             </NavItem>
                         }
                         { allRunIds.length > 1 && <>
-                           <NavItem itemId={7} isActive={false} onClick={(e, itemId) => { setRunSelectExpanded(!runSelectExpanded) }}>
+                           <NavItem itemId={8} isActive={false} onClick={(e, itemId) => { setRunSelectExpanded(!runSelectExpanded) }}>
                                <span ref={runsEl} style={{ cursor: "pointer" }}>Select run<CaretDownIcon /></span>
                            </NavItem>
-                           <NavItem itemId={8} isActive={false}>
+                           <NavItem itemId={9} isActive={false}>
                                <NavLink exact={true} to="/comparison" activeClassName="pf-m-current">
                                  Comparison
                                </NavLink>

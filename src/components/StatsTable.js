@@ -92,7 +92,9 @@ const columns = [
 ];
 
 const redFailures = row => {
-   return row.original.failures && row.original.failures > 0 ? { background: "rgba(255, 0, 0, 0.2)" } : {}
+   return row.original.failures && row.original.failures > 0 ? { background: "rgba(255, 0, 0, 0.2)" } : (
+    row.original.summary.blockedTime > 0 ? {background: "rgba(255, 204, 0, 0.2)"} : {}
+   )
 }
 
 export default ({data}) => {
