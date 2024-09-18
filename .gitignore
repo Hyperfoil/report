@@ -24,7 +24,6 @@ yarn-error.log*
 
 *.iml
 package-lock.json
-yarn.lock
 
 /public/*.json
 !/public/manifest.json

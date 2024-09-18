@@ -4,9 +4,12 @@ Reports can easily grow to several MB.
 **NOTE** The reports do not embed the patternfly4 fonts. This results in several 404's when opening a report and is being discussed
 
 ## Building
+
+This project uses `yarn` so ensure you have it available in your system.
+
 ```
-npm install
-npm run build
+yarn install
+yarn run build
 ```
 ## Usage
 There are 3 supported use cases
@@ -27,9 +30,9 @@ a browser to index.html?data=http://hostname/all.json
 Hosting `build/index.html` along with the `build/static` folder (and all contents) supports the same `?data` query parameter and will make better use of browser request caching
 
 ## Developing
-The project is based on `create-react-app` and uses `npm` for package management. 
+The project is based on `create-react-app` and uses `yarn` for package management. 
 This means you need to download node and add it to the path
-Run `npm install` from the base directory for first time setup. 
-Use `npm start` to launch the react hot reload server which will open localhost:3000 in your browser.
+Run `yarn install` from the base directory for first time setup. 
+Use `yarn start` to launch the react hot reload server which will open localhost:3000 in your browser.
 The default index.html does not have embedded data. You can either add an all.json to the public folder and add `?data=http://localhost:3000/all.json`
 to the url or embed json data by replacing `[/**DATAKEY**/]` with the json data.

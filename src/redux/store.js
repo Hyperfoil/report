@@ -16,32 +16,38 @@ const CLEAR = "alert/clear";
 
 const dataReducer = (state = false, action) => {
     switch (action.type) {
-        case LOADED: {
+        case LOADED:
             state = {
                runs: action.data,
                currentRun: action.data[0],
             }
-        }
-        break;
-        case SELECT_RUN: {
+            break;
+        case SELECT_RUN:
             state = {
                runs: state.runs,
                currentRun: state.runs.find(r => findHyperfoilData(r).info.id === action.runId)
             }
+            break;
+        default: {
+            state = {...state}
+            break;
         }
-        break
     }
     return state;
 }
 const alertReducer = (state = [], action) => {
     switch (action.type) {
-        case ERROR: {
+        case ERROR:
             const { title, variant, message } = action;
             state = [...state, { title, variant, message }]
-        } break;
-        case CLEAR: {
+            break;
+        case CLEAR:
             state = []
-        } break;
+            break;
+        default: {
+            state = [...state]
+            break;
+        }
     }
     return state;
 }
