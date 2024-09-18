@@ -186,6 +186,11 @@ export const getAllFailures = state => {
    return data && data.failures ? data.failures : []
 }
 
+export const getAllErrors = state => {
+    const data = hfdata(state)
+    return data && data.info.errors && data.info.errors ? data.info.errors : []
+ }
+
 export const getCpu = state => {
    return (state && state.data && state.data.currentRun && state.data.currentRun.cpu && state.data.currentRun.cpu.data) || []
 }

@@ -20,6 +20,7 @@ import Phase from './pages/Phase';
 import Connections from './pages/Connections'
 import Sessions, { PhaseSessions } from './pages/Sessions'
 import Failures from './pages/Failures';
+import Errors from './pages/Errors';
 import Cpu from './pages/Cpu';
 import Comparison from './pages/Comparison'
 
@@ -44,6 +45,7 @@ ReactDOM.render(
                     <Route path="/sessions/:phase/:fork" component={PhaseSessions} />
                     <Route path="/sessions/:phase" component={PhaseSessions} />
                     <Route path="/failures" component={Failures} />
+                    <Route path="/errors" component={Errors} />
                     <Route path="/cpu" component={Cpu} />
                     <Route path="/comparison" component={Comparison} />
                 </CacheSwitch>
