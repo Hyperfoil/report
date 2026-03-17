@@ -3,6 +3,22 @@ Generate html reports from the Hyperfoil all.json output file. The report is a s
 Reports can easily grow to several MB.
 **NOTE** The reports do not embed the patternfly4 fonts. This results in several 404's when opening a report and is being discussed
 
+## Getting started
+- Follow the instructions at https://nodejs.org/en/download
+- Execute:
+- `nvm install 16`
+- `nvm use 16`
+- `npm install --global yarn`
+- `yarn start`
+
+## Generate the HTML report for testing
+```bash
+yarn run build
+chmod +x build/report.sh
+./build/report.sh /path/to/your/all.json > test-report.html
+```
+Open the HTML on your browser.
+
 ## Building
 
 This project uses `yarn` so ensure you have it available in your system.
