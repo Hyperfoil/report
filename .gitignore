@@ -27,3 +27,5 @@ package-lock.json
 
 /public/*.json
 !/public/manifest.json
+
+.idea
