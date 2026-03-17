@@ -143,10 +143,6 @@ function Section({ forkName, metricName }) {
 
     const forkMetric_stats = stats.filter(v => ((!forkName && !v.fork) || v.fork === forkName) && v.metric === metricName)
 
-    const maxResponseTimes = forkMetric_stats.map(v => v.total.summary.percentileResponseTime["99.9"]).sort((a, b) => a - b)
-    // We need to use functional range to reduce the domain below dataMax
-    const responseTimeDomain = [0, dataMax => maxResponseTimes[Math.floor(maxResponseTimes.length * 0.8)] * 2]
-
     const phaseNames = [...new Set(forkMetric_stats.map(v=>v.phase))]
     phaseNames.sort()
     const series = forkMetric_stats.flatMap(v=>v.series.map(entry=>{
@@ -167,6 +163,16 @@ function Section({ forkName, metricName }) {
         (v.start <= currentDomain[1] && v.start >= currentDomain[0]) ||
         (v.end >= currentDomain[0] && v.end <= currentDomain[1])
     )
+
+    // Calculate max value from the timetable data (after accessor transformation) and add 20% padding
+    const allPercentileValues = timetable.flatMap(entry =>
+        phaseIds.flatMap(phaseId =>
+            percentiles.map(p => entry[`${phaseId}_${p}`])
+        )
+    ).filter(v => v !== undefined && v !== null)
+
+    const maxResponseTime = allPercentileValues.reduce((max, val) => (val > max ? val : max), 0)
+    const responseTimeDomain = [0, maxResponseTime * 1.2]
 
     let colorIndex = -1;
     const areas = [];
@@ -339,7 +345,7 @@ function Section({ forkName, metricName }) {
                                     //domain={domain}
                                     domain={currentDomain}
                                 />
-                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={responseTimeDomain}>
+                                <YAxis yAxisId={0} orientation="left" tickFormatter={nanoToMs} domain={responseTimeDomain} allowDataOverflow={true}>
                                     <Label value="response time" position="insideLeft" angle={-90} style={{ textAnchor: 'middle' }}/>
                                 </YAxis>
                                 <YAxis yAxisId={1} orientation="right">
