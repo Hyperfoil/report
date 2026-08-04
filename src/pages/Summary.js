@@ -52,51 +52,31 @@ const statAccessors = [
 const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
 
-const phasesTimetable = (data = [], stats = [], getStart = v => v.startTime, getEnd = v => v.endTime, getKey = v=>v._pif) => {
+const phasesTimetable = (data = [], stats = [], getStart = v => v.startTime, getEnd = v => v.endTime, getKey = v => v._pif) => {
     let rtrn = {}
-    // In runs with multiple agents the wall-clock timestamps often don't match exactly; while merging the stats
-    // each interval is an union of the agents' intervals and therefore the per-second intervals overlap.
-    // That would mess up charts, producing a sawtooth-like pattern instead of bars, so we have to artificially correct it.
-    let ends = {}
-    data.forEach(entry => {
-        const key = getKey(entry)
-        let phaseEnds = ends[key]
-        if (!phaseEnds) {
-            ends[key] = phaseEnds = []
-        }
-        phaseEnds.push(getEnd(entry))
-    })
-    Object.values(ends).forEach(phaseEnds => phaseEnds.sort())
-    data.forEach(entry => {
-        const key = getKey(entry);//phaseName
 
-        let start = getStart(entry);
+    data.forEach(entry => {
+        const key = getKey(entry);
+        const start = getStart(entry);
         const end = getEnd(entry);
-        const prevEndIndex = ends[key].filter(e => e < end).length - 1
-        if (prevEndIndex >= 0 && ends[key][prevEndIndex] >= start) {
-            start = ends[key][prevEndIndex] + 1
-        }
-
-        const rtrnStart = rtrn[start] || { _areaKey: start }
-        const rtrnEnd = rtrn[end] || { _areaKey: end }
+        // Plot each bucket at its startTime. With type="stepAfter" recharts
+        // draws a flat horizontal segment from this point to the next, which
+        // visually covers exactly the [startTime, endTime] window. The tooltip
+        // activates anywhere in that span because recharts assigns cursor
+        // positions to the nearest preceding data point.
+        const rtrnStart = rtrn[start] || { _areaKey: start, start: start, end: end };
 
         stats.forEach(stat => {
             const statKey = key + "_" + stat.name;
-            const statValue = stat.accessor(entry)
-            rtrnStart[statKey] = statValue
-            rtrnEnd[statKey] = statValue
-        })
-        rtrnStart.start = start
-        rtrnStart.end = end
-        rtrnEnd.start = start
-        rtrnEnd.end = end
+            rtrnStart[statKey] = stat.accessor(entry);
+        });
 
         rtrn[start] = rtrnStart;
-        rtrn[end] = rtrnEnd;
-    })
-    //sort by the timestamp
-    rtrn = Object.values(rtrn).sort((a, b) => a._areaKey - b._areaKey)
-    return rtrn
+    });
+
+    // Sort chronologically by start time
+    rtrn = Object.values(rtrn).sort((a, b) => a._areaKey - b._areaKey);
+    return rtrn;
 }
 const getPhaseTransitionTs = (data = [], getStart = (v) => v.startTime, getEnd = v => v.endTime) => {
     const rtrn = []
@@ -198,8 +178,8 @@ function Section({ forkName, metricName }) {
                         stroke={color}
                         unit="ns"
                         fill={color}
-                        connectNulls={true} //needs to be true for cases of overlap betweeen phases
-                        type="monotone"
+                        connectNulls={true}
+                        type="stepAfter"
                         yAxisId={0}
                         isAnimationActive={false}
                         style={{ opacity: 0.5 }}
@@ -216,6 +196,7 @@ function Section({ forkName, metricName }) {
                     stroke={"#FF0000"}
                     fill={"#FF0000"}
                     connectNulls={true}
+                    type="stepAfter"
                     dot={false}
                     isAnimationActive={false}
                     style={{ strokeWidth: 1 }}
@@ -230,6 +211,7 @@ function Section({ forkName, metricName }) {
                     stroke={"#00A300"}
                     fill={"#00A300"}
                     connectNulls={true}
+                    type="stepAfter"
                     dot={false}
                     isAnimationActive={false}
                     style={{ strokeWidth: 1 }}
@@ -244,6 +226,7 @@ function Section({ forkName, metricName }) {
                         stroke={"#A30000"}
                         fill={"#A30000"}
                         connectNulls={true}
+                        type="stepAfter"
                         dot={false}
                         isAnimationActive={false}
                         style={{ strokeWidth: 1 }}

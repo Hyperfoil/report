@@ -11,13 +11,16 @@ Reports can easily grow to several MB.
 - `npm install --global yarn`
 - `yarn start`
 
+## Artifact information
+* `/path/to/your/all.json` is the file produced by Hyperfoil.
+* `test-report.html` will be the output created by `report.sh`
 ## Generate the HTML report for testing
 ```bash
 yarn run build
 chmod +x build/report.sh
 ./build/report.sh /path/to/your/all.json > test-report.html
 ```
-Open the HTML on your browser.
+Open the `test-report.html` HTML on your browser.
 
 ## Building
 

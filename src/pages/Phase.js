@@ -51,8 +51,13 @@ export default () => {
             rtrn._bucketCount = index > 0 ? entry.totalCount - all[index - 1].totalCount : entry.totalCount
             rtrn._total = all[all.length - 1].totalCount;
             rtrn.value = entry.to / 1000000
+
             if (rtrn.percentile === 1) {
-                return undefined; //
+                // Give 100% a safe "inversed" value so it doesn't calculate Infinity.
+                // We place it one logarithmic step (x10) past the previous maximum point.
+                const prev = all[index - 1];
+                rtrn.inversed = prev && prev.percentile !== 1 ? (1 / (1 - prev.percentile)) * 10 : 100000;
+                return rtrn;
             } else {
                 rtrn.inversed = (1 / (1 - rtrn.percentile))
                 return rtrn;
@@ -64,21 +69,32 @@ export default () => {
         const tickTransform = {}
         const ranges = {}
         percentileHisto.forEach((entry,idx,all)=>{
-
             tickTransform[entry.inversed] = entry.percentile
             ranges[entry.count] = (idx>0 ? all[idx-1].count : 0)
-
         })
+
+        // Reusable formatter for dynamic decimal precision
+        const formatPercentValue = (v) => {
+            if (v === 1) return "100%";
+            const percent = 100 * v;
+
+            if (v >= 0.999999) return percent.toFixed(6) + "%";
+            if (v >= 0.99999) return percent.toFixed(5) + "%";
+            if (v >= 0.9999) return percent.toFixed(4) + "%";
+            if (v >= 0.999) return percent.toFixed(3) + "%";
+
+            return percent.toFixed(2) + "%";
+        };
+
         const tickFormatter = (v) => {
             if (typeof tickTransform[v] !== "undefined") {
                 v = tickTransform[v]
             }
-            return Number(100 * v).toFixed(2)+"%"
+            return formatPercentValue(v);
         }
+
         const responsetimeTickFormatter = (v,f,g) => {
-            // const entry = responsetimeHisto[v];
             return v;
-            //return Math.round(entry.from / 1000000).toFixed(0)+"-"+Math.round(entry.to / 1000000).toFixed(0)
         }
 
         const extra = [
@@ -86,16 +102,53 @@ export default () => {
             (v) => ({ color: "grey", name: "after", value: (v._total - v.totalCount) })
         ]
 
+        const targetPercentiles = [
+            { key: 0, label: "p0" },
+            { key: 0.25, label: "p25" },
+            { key: 0.50, label: "p50" },
+            { key: 0.75, label: "p75" },
+            { key: 0.90, label: "p90" },
+            { key: 0.95, label: "p95" },
+            { key: 0.99, label: "p99" },
+            { key: 0.999, label: "p99.9" },
+            { key: 0.9999, label: "p99.99" },
+            { key: 0.99999, label: "p99.999" },
+            { key: 0.999999, label: "p99.9999" },
+            { key: 1.0, label: "p100" },
+        ];
+
+        // Map the definitions and display the exactly matched percentile
+        const percentileTableRows = targetPercentiles.map(tp => {
+            const bucket = stat.histogram.percentiles.find(e => e.percentile >= tp.key)
+                || stat.histogram.percentiles[stat.histogram.percentiles.length - 1];
+
+            const valueMs = bucket ? (bucket.to / 1000000).toFixed(2) : "N/A";
+            const exactPercentile = bucket ? formatPercentValue(bucket.percentile) : "N/A";
+
+            return (
+                <tr key={tp.key}>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #ededed', fontWeight: 600 }}>
+                        {tp.label} <span style={{color: '#6a6e73', fontWeight: 400, fontSize: '0.9em'}}>({exactPercentile})</span>
+                    </td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #ededed', textAlign: 'right', fontWeight: 600, color: '#002F5D' }}>
+                        {valueMs} ms
+                    </td>
+                </tr>
+            );
+        });
+
         segments.push(
             <React.Fragment key={stat.metric}>
                 <Title headingLevel="h1" size="4xl">{stat.name}</Title>
-                <Card style={{ pagreBreakInside: 'avoid' }}>
-                     <CardHeader>
-                         <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-                             <ToolbarGroup><ToolbarItem>{`${stat.metric} response time histogram`}</ToolbarItem></ToolbarGroup>
-                         </Toolbar>
-                     </CardHeader>
-                     <CardBody style={{ minHeight: 410 }}>
+
+                {/* 1. Response Time Histogram */}
+                <Card style={{ pageBreakInside: 'avoid', marginBottom: '1rem' }}>
+                    <CardHeader>
+                        <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+                            <ToolbarGroup><ToolbarItem>{`${stat.metric} response time histogram`}</ToolbarItem></ToolbarGroup>
+                        </Toolbar>
+                    </CardHeader>
+                    <CardBody style={{ minHeight: 410 }}>
                         <AutoSizer>{({ height, width }) => {
                             return (
                                 <ComposedChart
@@ -107,7 +160,7 @@ export default () => {
                                     <XAxis
                                         type="number"
                                         scale="linear"
-                                        domain={['auto', 'auto']} //for use with log
+                                        domain={['auto', 'auto']}
                                         dataKey="value"
                                     >
                                         <Label
@@ -144,15 +197,17 @@ export default () => {
                                 </ComposedChart>
                             )
                         }}</AutoSizer>
-                     </CardBody>
+                    </CardBody>
                 </Card>
-                <Card style={{ pageBreakInside: 'avoid' }}>
-                     <CardHeader>
-                         <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
-                             <ToolbarGroup><ToolbarItem>{`${stat.metric} percentile distribution`}</ToolbarItem></ToolbarGroup>
-                         </Toolbar>
-                     </CardHeader>
-                     <CardBody style={{ minHeight: 410 }}>
+
+                {/* 2. Percentile Distribution Chart */}
+                <Card style={{ pageBreakInside: 'avoid', marginBottom: '1rem' }}>
+                    <CardHeader>
+                        <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+                            <ToolbarGroup><ToolbarItem>{`${stat.metric} percentile distribution`}</ToolbarItem></ToolbarGroup>
+                        </Toolbar>
+                    </CardHeader>
+                    <CardBody style={{ minHeight: 410 }}>
                         <AutoSizer>{({ height, width }) => {
                             return (
                                 <ComposedChart
@@ -162,12 +217,12 @@ export default () => {
                                 >
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis
-                                         type="number"
-                                         scale="log"
-                                         domain={['auto', 'auto']} //for use with log
-                                         dataKey="inversed"
-                                         interval={10}
-                                         tickFormatter={tickFormatter}
+                                        type="number"
+                                        scale="log"
+                                        domain={['auto', 'auto']}
+                                        dataKey="inversed"
+                                        interval={10}
+                                        tickFormatter={tickFormatter}
                                     >
                                         <Label value="percentile" position="insideBottom" angle={0} offset={0} textAnchor='middle' style={{ textAnchor: 'middle' }} />
                                     </XAxis>
@@ -179,18 +234,41 @@ export default () => {
                                 </ComposedChart>
                             )
                         }}</AutoSizer>
-                     </CardBody>
+                    </CardBody>
+                </Card>
+
+                {/* 3. Percentile Data Table */}
+                <Card style={{ pageBreakInside: 'avoid', marginBottom: '1rem' }}>
+                    <CardHeader>
+                        <Toolbar className="pf-l-toolbar pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md">
+                            <ToolbarGroup><ToolbarItem>{`${stat.metric} key performance percentiles`}</ToolbarItem></ToolbarGroup>
+                        </Toolbar>
+                    </CardHeader>
+                    <CardBody>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'inherit' }}>
+                            <thead>
+                            <tr>
+                                <th style={{ padding: '12px 16px', borderBottom: '2px solid #d2d2d2' }}>Percentile</th>
+                                <th style={{ padding: '12px 16px', borderBottom: '2px solid #d2d2d2', textAlign: 'right' }}>Response Time</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {percentileTableRows}
+                            </tbody>
+                        </table>
+                    </CardBody>
                 </Card>
             </React.Fragment>
         )
     })
+
     return (<>
-               {segments}
-               <br />
-               <Card>
-                  <CardBody>
-                     <StatsTable data={totals} />
-                  </CardBody>
-               </Card>
-           </>)
+        {segments}
+        <br />
+        <Card>
+            <CardBody>
+                <StatsTable data={totals} />
+            </CardBody>
+        </Card>
+    </>)
 }
