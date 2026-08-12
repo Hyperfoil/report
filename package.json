@@ -14,7 +14,7 @@
     "html2canvas": "^1.0.0-rc.3",
     "import": "^0.0.6",
     "lodash": "4.17.19",
-    "lodash-es": "4.17.14",
+    "lodash-es": "4.17.21",
     "luxon": "^1.16.0",
     "prop-types": "^15.7.2",
     "query-string": "^6.12.1",
