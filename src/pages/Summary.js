@@ -53,30 +53,47 @@ const colors = theme.colors.chart
 const colorNames = Object.keys(colors);
 
 const phasesTimetable = (data = [], stats = [], getStart = v => v.startTime, getEnd = v => v.endTime, getKey = v => v._pif) => {
-    let rtrn = {}
+    const rtrn = {};
+    // Sort data chronologically to reliably determine phase boundaries
+    const sortedData = [...data].sort((a, b) => getStart(a) - getStart(b));
 
-    data.forEach(entry => {
+    sortedData.forEach((entry, i) => {
         const key = getKey(entry);
         const start = getStart(entry);
-        const end = getEnd(entry);
-        // Plot each bucket at its startTime. With type="stepAfter" recharts
-        // draws a flat horizontal segment from this point to the next, which
-        // visually covers exactly the [startTime, endTime] window. The tooltip
-        // activates anywhere in that span because recharts assigns cursor
-        // positions to the nearest preceding data point.
-        const rtrnStart = rtrn[start] || { _areaKey: start, start: start, end: end };
+        let end = getEnd(entry);
+
+        // Check if this is the last data point for the current phase
+        const isLastOfPhase = !sortedData.some((e, idx) => idx > i && getKey(e) === key);
+        if (isLastOfPhase) {
+            // Find the start time of the very next phase
+            const nextPhaseEntry = sortedData.find(e => getStart(e) > end);
+            if (nextPhaseEntry) {
+                // Extend the current 'end' time to touch the next phase.
+                // This removes the visual whitespace gap between phases.
+                end = getStart(nextPhaseEntry);
+            }
+        }
+
+        if (!rtrn[start]) rtrn[start] = { _areaKey: start, start: start, end: end };
+        if (!rtrn[end]) rtrn[end] = { _areaKey: end, start: end, end: end };
 
         stats.forEach(stat => {
             const statKey = key + "_" + stat.name;
-            rtrnStart[statKey] = stat.accessor(entry);
+            const val = stat.accessor(entry);
+
+            rtrn[start][statKey] = val;
+
+            // Propagate the actual value to the end boundary.
+            // With Recharts type="stepAfter", this forces the horizontal line
+            // to draw completely to the end without dropping to zero,
+            // while keeping tooltip data accurate during the transition.
+            if (rtrn[end][statKey] === undefined) {
+                rtrn[end][statKey] = val;
+            }
         });
-
-        rtrn[start] = rtrnStart;
     });
-
     // Sort chronologically by start time
-    rtrn = Object.values(rtrn).sort((a, b) => a._areaKey - b._areaKey);
-    return rtrn;
+    return Object.values(rtrn).sort((a, b) => a._areaKey - b._areaKey);
 }
 const getPhaseTransitionTs = (data = [], getStart = (v) => v.startTime, getEnd = v => v.endTime) => {
     const rtrn = []
@@ -140,8 +157,12 @@ function Section({ forkName, metricName }) {
         statAccessors
     )
     .filter(v =>
-        (v.start <= currentDomain[1] && v.start >= currentDomain[0]) ||
-        (v.end >= currentDomain[0] && v.end <= currentDomain[1])
+        // 1. The start point is inside the visible area
+        (v.start >= currentDomain[0] && v.start <= currentDomain[1]) ||
+        // 2. The end point is inside the visible area
+        (v.end >= currentDomain[0] && v.end <= currentDomain[1]) ||
+        // 3. It covers the whole visible area (starts before and ends after it)
+        (v.start < currentDomain[0] && v.end > currentDomain[1])
     )
 
     // Calculate max value from the timetable data (after accessor transformation) and add 20% padding
